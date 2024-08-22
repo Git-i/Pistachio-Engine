@@ -1,0 +1,9 @@
+[submodule "subprojects/RHI"]
+	path = subprojects/RHI
+	url = https://github.com/Git-i/RHI.git
+[submodule "subprojects/TraceRHI"]
+	path = subprojects/TraceRHI
+	url = https://github.com/Git-i/TraceRHI.git
+[submodule "subprojects/rhi_sc"]
+	path = subprojects/rhi_sc
+	url = https://github.com/Git-i/rhi_sc.git
