@@ -60,15 +60,15 @@ void main( uint3 DTid : SV_DispatchThreadID )
     uint index = DTid.x + (DTid.y * inputBuffer.csDimensions.x) + (DTid.z * inputBuffer.csDimensions.x * inputBuffer.csDimensions.y);
     float2 tileSize = float2(inputBuffer.screenSize) / float2(inputBuffer.csDimensions.xy);
     float4 clusterMin_SS = float4(tileSize * DTid.xy,1,1);
-    float4 clusterMax_SS = float4(tileSize * (DTid.xy + 1.xx), 1, 1);
+    float4 clusterMax_SS = float4(tileSize * (DTid.xy + float2(1,1)), 1, 1);
     float tileNear = inputBuffer.zNear * pow(inputBuffer.zFar / inputBuffer.zNear, float(DTid.z) / float(inputBuffer.csDimensions.z));
     float tileFar = inputBuffer.zNear * pow(inputBuffer.zFar / inputBuffer.zNear, float(DTid.z+1) / float(inputBuffer.csDimensions.z));
     float3 clusterMax_VS = screen2view(clusterMax_SS).xyz;
     float3 clusterMin_VS = screen2view(clusterMin_SS).xyz;
-    float3 minPointNear = lineIntersectionToZPlane(0.xxx, clusterMin_VS, tileNear);
-    float3 minPointFar = lineIntersectionToZPlane (0.xxx, clusterMin_VS, tileFar);
-    float3 maxPointNear = lineIntersectionToZPlane(0.xxx, clusterMax_VS, tileNear);
-    float3 maxPointFar = lineIntersectionToZPlane (0.xxx, clusterMax_VS, tileFar);
+    float3 minPointNear = lineIntersectionToZPlane(float3(0,0,0), clusterMin_VS, tileNear);
+    float3 minPointFar = lineIntersectionToZPlane (float3(0,0,0), clusterMin_VS, tileFar);
+    float3 maxPointNear = lineIntersectionToZPlane(float3(0,0,0), clusterMax_VS, tileNear);
+    float3 maxPointFar = lineIntersectionToZPlane (float3(0,0,0), clusterMax_VS, tileFar);
     
     float3 minPointAABB = min(min(minPointNear, minPointFar), min(maxPointNear, maxPointFar));
     float3 maxPointAABB = max(max(minPointNear, minPointFar), max(maxPointNear, maxPointFar));

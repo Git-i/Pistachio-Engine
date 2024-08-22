@@ -31,7 +31,7 @@ uint getSlice(float z)
 void main( uint3 DTid : SV_DispatchThreadID )
 {
     float z = zprepass.Load(DTid); // DTid z is always 0;
-    float4 temp = float4(0.xx, z, 1);
+    float4 temp = float4(float2(0,0), z, 1);
     temp = mul(temp, inputBuffer.InvProj);
     uint slice = getSlice(temp.z/temp.w);
     float2 tileSize = float2(inputBuffer.screenSize) / float2(inputBuffer.numClusters.xy);

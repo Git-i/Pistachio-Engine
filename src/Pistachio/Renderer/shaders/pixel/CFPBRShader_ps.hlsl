@@ -214,7 +214,7 @@ float4 main(PSINTPUT input) : SV_TARGET
         dir_shd_i <  (numShadowDirLights * ShadowLightStepSize) + (numRegularLights * RegularLightStepSize); dir_shd_i += ShadowLightStepSize)
     {
         ShadowCastingLight light = ShadowLight(dir_shd_i);
-        float cascadePlaneDistances[4] = {light.light.position.xyz, zFar};
+        float cascadePlaneDistances[4] = {light.light.position.x,light.light.position.y,light.light.position.z, zFar};
         if (depthViewSpace <= cascadePlaneDistances[3])
         {
             shadowMaplayer = 3;

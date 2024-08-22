@@ -111,15 +111,38 @@ sources = [
 tests_src = [
     'tests/script_test.cpp'
 ]
-# TODO: Shader Compilation
-#shaders = [
-#
-#]
-shader_compiler = generator(rhi_sc_exe,
-    arguments: ['@INPUT@'],
-    output: ['@BASENAME@.rbc'])
+vertex_shaders = [
+    'src/Pistachio/Renderer/shaders/vertex/prefilter_vs.hlsl',
+    'src/Pistachio/Renderer/shaders/vertex/StandaloneVertexShader.hlsl',
+    'src/Pistachio/Renderer/shaders/vertex/vertex_shader_no_transform.hlsl',
+    'src/Pistachio/Renderer/shaders/vertex/equirectangular_to_cubemap_vs.hlsl',
+    'src/Pistachio/Renderer/shaders/vertex/Shadow_vs.hlsl',
+    'src/Pistachio/Renderer/shaders/vertex/VertexShader.hlsl'
+]
+pixel_shaders = [
+    'src/Pistachio/Renderer/shaders/pixel/background_ps.hlsl',
+    'src/Pistachio/Renderer/shaders/pixel/CFPBRShader_ps.hlsl',
+    'src/Pistachio/Renderer/shaders/pixel/equirectangular_to_cubemap_fs.hlsl',
+    'src/Pistachio/Renderer/shaders/pixel/irradiance_fs.hlsl',
+    'src/Pistachio/Renderer/shaders/pixel/prefilter_fs.hlsl',
+    'src/Pistachio/Renderer/shaders/pixel/Shadow_ps.hlsl',
+]
+compute_shaders = [
+    'src/Pistachio/Renderer/shaders/compute/BRDF_LUT_cs.hlsl',
+    'src/Pistachio/Renderer/shaders/compute/CFActiveClusters_cs.hlsl',
+    'src/Pistachio/Renderer/shaders/compute/CFBuildClusters_cs.hlsl',
+    'src/Pistachio/Renderer/shaders/compute/CFCullLights_cs.hlsl',
+    'src/Pistachio/Renderer/shaders/compute/CFTightenList_cs.hlsl',
+    'src/Pistachio/Renderer/shaders/compute/EqToCubeMap_cs.hlsl',
+    #'src/Pistachio/Renderer/shaders/compute/Irradiance_cs.hlsl',
+]
+shader_gen = generator(rhi_sc_exe, arguments: ['@INPUT@', '-o', '@OUTPUT@', '-ONone', '-g', '@EXTRA_ARGS@'],  output: ['@BASENAME@.rbc'])
 
+vs_compiled = shader_gen.process(vertex_shaders, extra_args: ['-t', 'vertex'])
+ps_compiled = shader_gen.process(pixel_shaders, extra_args: ['-t', 'pixel'])
+cs_compiled = shader_gen.process(compute_shaders, extra_args: ['-t', 'compute'])
 
+custom_target('Shaders', command:['cd'], input: [vs_compiled, ps_compiled, cs_compiled], output: ['shaders'])
 if(build_machine.system() == 'linux')
     deps += glfw3_dep
     args += '-DUSE_GLFW'
