@@ -11,11 +11,7 @@ if not yaml_dep.found()
     yaml_dep = yaml_cpp.dependency('yaml-cpp')
 endif
 
-assimp_dep = dependency('assimp', required: deps_required)
-if not assimp_dep.found()
-    assimp = cmake.subproject('assimp')
-    assimp_dep = assimp.dependency('assimp')
-endif
+assimp_dep = dependency('assimp')
 
 glfw3_dep = dependency('glfw3')
 
