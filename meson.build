@@ -138,7 +138,5 @@ add_project_arguments(args,language: 'cpp',)
 inc = include_directories(inc_dirs)
 lib = shared_library('Pistachio',sources,include_directories:inc,dependencies:deps,
     override_options: ['cpp_std=c++20'])
-pistachio_dep = [
-    declare_dependency(include_directories:inc, link_with:lib), deps
-]
+pistachio_dep = declare_dependency(include_directories:inc, link_with:lib, dependencies: deps)
 executable('Pistachio-Tests', tests_src,dependencies: pistachio_dep)
