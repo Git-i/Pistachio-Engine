@@ -36,6 +36,7 @@ namespace Pistachio {
 		//logger options
 		//leave null to log to stdout
 		const char* log_file_name = nullptr;
+		std::string_view shader_dir;
 		std::function<RHI::PhysicalDevice*(std::span<RHI::PhysicalDevice*>)> select_physical_device;
 	};
 	class PISTACHIO_API Application
@@ -59,6 +60,7 @@ namespace Pistachio {
 		bool IsHeadless() {
 			return m_headless;
 		};
+		const std::string& GetShaderDir() {return shaderDir;}
 	private:
 		std::unique_ptr<InputHandler> handler;
 		bool m_headless = false;
@@ -67,6 +69,7 @@ namespace Pistachio {
 		bool m_Running = true;
 		bool m_minimized = false;
 		static Application* s_Instance;
+		std::string shaderDir;
 		std::chrono::time_point<std::chrono::high_resolution_clock> InitTime;
 		std::chrono::milliseconds lastFrameTime;
 		//LARGE_INTEGER frequency;

@@ -31,6 +31,7 @@ namespace Pistachio {
 		ropt.forceSingleQueue = opt.forceSingleQueue;
 		ropt.indices = opt.indices;
 		ropt.custom_fn = std::move(opt.select_physical_device);
+		shaderDir = opt.shader_dir;
 		if (!opt.headless)
 		{
 			WindowInfo info;

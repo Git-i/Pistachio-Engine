@@ -4,6 +4,7 @@
 #include "FormatsAndTypes.h"
 #include "PipelineStateObject.h"
 #include "Pistachio/Asset/AssetManager.h"
+#include "Pistachio/Core/Application.h"
 #include "Pistachio/Core/Log.h"
 #include "Pistachio/Renderer/Shader.h"
 #include "Pistachio/Renderer/ShaderAsset.h"
@@ -143,6 +144,7 @@ namespace Pistachio
 
     void RendererContext::Initailize()
     {
+		auto& shader_dir = Application::Get().GetShaderDir();
         //Create constant and structured buffers needed for each frame in flight
 		PT_CORE_INFO("Initializing 3D Renderer Context");
 		//vertex buffer
@@ -185,43 +187,31 @@ namespace Pistachio
 		
 
 		RHI::BlendMode blendMode{};
-		Helpers::BlendModeDisabledBlend(blendMode);
 
 		RHI::DepthStencilMode dsMode{};
-		Helpers::FillDepthStencilMode(dsMode);
 
 		RHI::RasterizerMode rsMode{};
-		Helpers::FillRaseterizerMode(rsMode, RHI::FillMode::Solid, RHI::CullMode::None);
 
-		ShaderCreateDesc ShaderDesc{};
-		Helpers::ZeroAndFillShaderDesc(ShaderDesc, 
-			"resources/shaders/vertex/Compiled/equirectangular_to_cubemap_vs", 
-			"resources/shaders/pixel/Compiled/equirectangular_to_cubemap_fs",1,
-			1, &dsMode,
-			1, &blendMode,
-			1, &rsMode);
-		ShaderDesc.InputDescription = Mesh::GetLayout();
-		ShaderDesc.numInputs = Mesh::GetLayoutSize();
-		ShaderDesc.RTVFormats[0] = RHI::Format::R16G16B16A16_FLOAT;
 
 		PT_CORE_INFO("Creating Compute Shaders...");
 		PT_CORE_INFO("Build Clusters");
-		computeShaders["Build Clusters"] = ComputeShader::Create({   {"resources/shaders/compute/Compiled/CFBuildClusters_cs"},0 }, RHI::ShaderMode::File);
+		computeShaders["Build Clusters"] = ComputeShader::Create(   {shader_dir + "CFBuildClusters_cs.rbc"} , RHI::ShaderMode::File);
 		PT_CORE_INFO("Filter Clusters");
-		computeShaders["Filter Clusters"] = ComputeShader::Create({  {"resources/shaders/compute/Compiled/CFActiveClusters_cs"},0 }, RHI::ShaderMode::File);
+		computeShaders["Filter Clusters"] = ComputeShader::Create({shader_dir + "CFActiveClusters_cs.rbc"}, RHI::ShaderMode::File);
 		PT_CORE_INFO("Tighten Clusters");
-		computeShaders["Tighten Clusters"] = ComputeShader::Create({ {"resources/shaders/compute/Compiled/CFTightenList_cs"},0 }, RHI::ShaderMode::File);
+		computeShaders["Tighten Clusters"] = ComputeShader::Create({ shader_dir + "CFTightenList_cs.rbc"}, RHI::ShaderMode::File);
 		PT_CORE_INFO("Cull Lights");
-		computeShaders["Cull Lights"] = ComputeShader::Create({ {"resources/shaders/compute/Compiled/CFCullLights_cs"},0 }, RHI::ShaderMode::File);
+		computeShaders["Cull Lights"] = ComputeShader::Create({ shader_dir+ "CFCullLights_cs.rbc"}, RHI::ShaderMode::File);
 		
 		
 
-		Pistachio::Helpers::FillDepthStencilMode(dsMode, true, RHI::DepthWriteMask::None);
-		Pistachio::Helpers::BlendModeDisabledBlend(blendMode);
-		Pistachio::Helpers::FillRaseterizerMode(rsMode);
-		Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderDesc, 
-			"resources/shaders/vertex/Compiled/VertexShader", 
-			"resources/shaders/pixel/Compiled/CFPBRShader_ps", 1, 1, &dsMode,1, &blendMode,1,&rsMode);
+		Helpers::FillDepthStencilMode(dsMode, true, RHI::DepthWriteMask::None);
+		Helpers::BlendModeDisabledBlend(blendMode);
+		Helpers::FillRaseterizerMode(rsMode);
+		ShaderCreateDesc ShaderDesc{};
+		std::string vs = shader_dir + "VertexShader.rbc";
+		std::string ps = shader_dir + "CFPBRShader_ps.rbc";
+		Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderDesc, vs,ps, 1, 1, &dsMode,1, &blendMode,1,&rsMode);
 		ShaderDesc.RTVFormats[0] = RHI::Format::R16G16B16A16_FLOAT;
 		ShaderDesc.DSVFormat = RHI::Format::D32_FLOAT;
 		ShaderDesc.InputDescription = Pistachio::Mesh::GetLayout();
@@ -243,9 +233,9 @@ namespace Pistachio
 		Pistachio::Helpers::FillDepthStencilMode(dsMode);
 		Pistachio::Helpers::BlendModeDisabledBlend(blendMode);
 		Pistachio::Helpers::FillRaseterizerMode(rsMode);
+		vs = shader_dir + "StandaloneVertexShader.rbc";
 		Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderDesc,
-			"resources/shaders/vertex/Compiled/StandaloneVertexShader",
-			nullptr, 0, 1, &dsMode, 1, &blendMode, 1, &rsMode);
+			vs,std::string_view(), 0, 1, &dsMode, 1, &blendMode, 1, &rsMode);
 		ShaderDesc.DSVFormat = RHI::Format::D32_FLOAT;
 		ShaderDesc.InputDescription = Pistachio::Mesh::GetLayout();
 		ShaderDesc.numInputs = Pistachio::Mesh::GetLayoutSize();
@@ -253,19 +243,22 @@ namespace Pistachio
 		shaders["Z-Prepass"] = Shader::Create(ShaderDesc, {{0u}}, std::nullopt);
 
 		//shadow shaders
-		ShaderDesc.VS = RHI::ShaderCode{ {"resources/shaders/vertex/Compiled/Shadow_vs"},0 };
+		vs = shader_dir + "Shadow_vs.rbc";
+		ShaderDesc.VS = RHI::ShaderCode{ vs };
 		ShaderDesc.RasterizerModes->cullMode = RHI::CullMode::Front;
 		PT_CORE_INFO("Creating Shadow Shader");
 		shaders["Shadow Shader"] = Shader::Create(ShaderDesc, {{0u}}, 1);
 
 
 		BrdfTex.CreateStack(512, 512, RHI::Format::R16G16_FLOAT, nullptr PT_DEBUG_REGION(,"Renderer -> White Texture"),TextureFlags::Compute);
-		ComputeShader* brdfShader = ComputeShader::Create({ {"resources/shaders/compute/Compiled/BRDF_LUT_cs"},0 },RHI::ShaderMode::File);
+		ComputeShader* brdfShader = ComputeShader::Create({shader_dir + "BRDF_LUT_cs" },RHI::ShaderMode::File);
 
 		ShaderDesc.DepthStencilModes->DepthWriteMask = RHI::DepthWriteMask::None;
 		ShaderDesc.RasterizerModes->cullMode = RHI::CullMode::None;
-		ShaderDesc.VS = { {"resources/shaders/vertex/Compiled/background_vs"}, 0};
-		ShaderDesc.PS = { {"resources/shaders/pixel/Compiled/background_ps"}, 0};
+		vs = shader_dir + "background_vs.rbc";
+		ps = shader_dir + "background_ps.rbc";
+		ShaderDesc.VS = { vs};
+		ShaderDesc.PS = { ps};
 		ShaderDesc.NumRenderTargets = 1;
 		ShaderDesc.RTVFormats[0] = RHI::Format::R16G16B16A16_FLOAT;
 		PT_CORE_INFO("Creating Background Shader");

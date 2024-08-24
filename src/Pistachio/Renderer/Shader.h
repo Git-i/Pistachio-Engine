@@ -11,6 +11,7 @@
 #include "xxhash.h"
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <type_traits>
 namespace Pistachio
 {
@@ -123,11 +124,11 @@ namespace Pistachio {
 	struct ShaderCreateDesc
 	{
 		//Constant
-		RHI::ShaderCode VS = {{nullptr}, 0};
-		RHI::ShaderCode PS = {{nullptr}, 0};
-		RHI::ShaderCode GS = {{nullptr}, 0};
-		RHI::ShaderCode HS = {{nullptr}, 0};
-		RHI::ShaderCode DS = {{nullptr}, 0};
+		RHI::ShaderCode VS = {{nullptr, 0}};
+		RHI::ShaderCode PS = {{nullptr, 0}};
+		RHI::ShaderCode GS = {{nullptr, 0}};
+		RHI::ShaderCode HS = {{nullptr, 0}};
+		RHI::ShaderCode DS = {{nullptr, 0}};
 		uint32_t NumRenderTargets = 1;	//can't be changed because this is with the pixel shader
 		RHI::Format RTVFormats[8]; // make this constant too??, or make it such that a shader can be used with multipe rtv formats
 		RHI::Format DSVFormat;
@@ -261,8 +262,8 @@ namespace Pistachio {
 		*	Input Description is Filled
 		*/
 		void ZeroAndFillShaderDesc(ShaderCreateDesc& desc,
-			const char* VS = nullptr,
-			const char* PS = nullptr,
+			std::string_view VS = std::string_view(),
+			std::string_view PS = std::string_view(),
 			uint32_t numRenderTargets = 1,
 			uint32_t numDSModes = 0,
 			RHI::DepthStencilMode* dsModes = nullptr,
@@ -270,9 +271,9 @@ namespace Pistachio {
 			RHI::BlendMode* blendModes = nullptr,
 			uint32_t numRasterizerModes = 0,
 			RHI::RasterizerMode* rsModes = nullptr,
-			const char* GS = nullptr,
-			const char* HS = nullptr,
-			const char* DS = nullptr);
+			std::string_view GS = std::string_view(),
+			std::string_view HS = std::string_view(),
+			std::string_view DS = std::string_view());
 		void FillDepthStencilMode(RHI::DepthStencilMode& mode,
 			bool depthEnabled = true,
 			RHI::DepthWriteMask mask = RHI::DepthWriteMask::All,

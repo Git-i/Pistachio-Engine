@@ -68,24 +68,6 @@ inline constexpr EnumType& operator^=(EnumType& a, EnumType b) {                
 	#define PISTACHIO_API
 #endif // PT_PLATFROM_WINDOWS
 
-#if !(defined(PISTACHIO_RENDER_API_DX11) || defined(PISTACHIO_RENDER_API_VULKAN) || defined(PISTACHIO_RENDER_API_DX12))
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#pragma message(__FILE__ "(" STRING(__LINE__) "): warning: No Render API was selected, defaulting to DX11")
-#define PISTACHIO_RENDER_API_DX11
-#endif // !PISTACHIO_RENDER_API_DX11
-#if defined(PISTACHIO_RENDER_API_VULKAN)
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#pragma message(__FILE__ "(" STRING(__LINE__) "): warning: Vulkan is Currently not supported, defaulting to DX11")
-#define PISTACHIO_RENDER_API_DX11
-#endif // PISTACHIO_RENDER_API_VULKAN
-#if defined(PISTACHIO_RENDER_API_DX12)
-#define STRING2(x) #x
-#define STRING(x) STRING2(x)
-#pragma message(__FILE__ "(" STRING(__LINE__) "): warning: DirectX 12 is Currently not supported, defaulting to DX11")
-#define PISTACHIO_RENDER_API_DX11
-#endif // PISTACHIO_RENDER_API_DX12
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 

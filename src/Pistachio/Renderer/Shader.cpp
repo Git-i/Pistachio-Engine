@@ -2,7 +2,6 @@
 #include "PipelineStateObject.h"
 #include "Pistachio/Core.h"
 #include "Pistachio/Core/Log.h"
-#include "Pistachio/Renderer/Renderer.h"
 #include "Ptr.h"
 #include "RootSignature.h"
 #include "ShaderReflect.h"
@@ -12,6 +11,8 @@
 #include "RendererBase.h"
 #include <optional>
 #include <ranges>
+#include <string_view>
+#include <variant>
 #define VERTEX_SHADER(ID) ((ID3D11VertexShader*)ID.Get())
 #define VERTEX_SHADER_PP(ID) ((ID3D11VertexShader**)ID.GetAddressOf())
 
@@ -241,11 +242,11 @@ namespace Pistachio {
 
 	Shader::~Shader()
 	{
-		if (VS.data) free(VS.mut_data);
-		if (PS.data) free(PS.mut_data);
-		if (HS.data) free(HS.mut_data);
-		if (GS.data) free(GS.mut_data);
-		if (DS.data) free(DS.mut_data);
+		//if (stdLLVS.data) free(VS.mut_data);
+		//if (stdLLPS.data) free(PS.mut_data);
+		//if (stdLLHS.data) free(HS.mut_data);
+		//if (stdLLGS.data) free(GS.mut_data);
+		//if (stdLLDS.data) free(DS.mut_data);
 	}
 
 	Shader* Shader::Create(const ShaderCreateDesc& desc, std::span<const uint32_t> dynamic_sets, std::optional<uint32_t> push_block)
@@ -461,19 +462,29 @@ namespace Pistachio {
 		std::vector<RHI::Ptr<RHI::ShaderReflection>> reflections;
 		if(mode == RHI::File)
 		{
-			if(VS.data) reflections.push_back(RHI::ShaderReflection::CreateFromFile(VS.data).value());
-			if(PS.data) reflections.push_back(RHI::ShaderReflection::CreateFromFile(PS.data).value());
-			if(GS.data) reflections.push_back(RHI::ShaderReflection::CreateFromFile(GS.data).value());
-			if(HS.data) reflections.push_back(RHI::ShaderReflection::CreateFromFile(HS.data).value());
-			if(DS.data) reflections.push_back(RHI::ShaderReflection::CreateFromFile(DS.data).value());
+			if(VS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromFile(VS.data).value());
+			if(PS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromFile(PS.data).value());
+			if(GS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromFile(GS.data).value());
+			if(HS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromFile(HS.data).value());
+			if(DS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromFile(DS.data).value());
 		}
 		else if (mode == RHI::Memory)
 		{
-			if(VS.data) reflections.push_back(RHI::ShaderReflection::CreateFromMemory(VS.data, VS.size).value());
-			if(PS.data) reflections.push_back(RHI::ShaderReflection::CreateFromMemory(PS.data, PS.size).value());
-			if(GS.data) reflections.push_back(RHI::ShaderReflection::CreateFromMemory(GS.data, GS.size).value());
-			if(HS.data) reflections.push_back(RHI::ShaderReflection::CreateFromMemory(HS.data, HS.size).value());
-			if(DS.data) reflections.push_back(RHI::ShaderReflection::CreateFromMemory(DS.data, DS.size).value());
+			if(VS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(VS.data).value());
+			if(PS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(PS.data).value());
+			if(GS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(GS.data).value());
+			if(HS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(HS.data).value());
+			if(DS.data.size())
+				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(DS.data).value());
 		}
 		auto[rsd,_1,_2] = RHI::ShaderReflection::FillRootSignatureDesc(reflections, dynamic_sets, push_block);
 		layouts.resize(rsd.numRootParameters);
@@ -586,7 +597,7 @@ namespace Pistachio {
 		shader->rSig = rSig;
 		RHI::Ptr<RHI::ShaderReflection> CSReflection;
 		if (mode == RHI::ShaderMode::File) CSReflection = RHI::ShaderReflection::CreateFromFile(code.data).value();
-		else CSReflection = RHI::ShaderReflection::CreateFromMemory(code.data, code.size).value();
+		else CSReflection = RHI::ShaderReflection::CreateFromMemory(code.data).value();
 		shader->CreateSetInfos(CSReflection);
 		RHI::ComputePipelineDesc desc;
 		desc.CS = code;
@@ -600,7 +611,7 @@ namespace Pistachio {
 	{
 		std::array<RHI::Ptr<RHI::ShaderReflection>,1> CSReflection;
 		if (mode == RHI::ShaderMode::File) CSReflection[0] = RHI::ShaderReflection::CreateFromFile(code.data).value();
-		else CSReflection[0] = RHI::ShaderReflection::CreateFromMemory(code.data, code.size).value();
+		else CSReflection[0] = RHI::ShaderReflection::CreateFromMemory(code.data).value();
 		auto[rsd, _1, _2] = RHI::ShaderReflection::FillRootSignatureDesc(CSReflection, {}, std::nullopt);
 		layouts.resize(rsd.numRootParameters);
 		rSig = RendererBase::device->CreateRootSignature(&rsd, layouts.data()).value();
@@ -632,14 +643,14 @@ namespace Pistachio {
 
 }
 
-void Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderCreateDesc& desc, const char* VS, const char* PS, uint32_t numRenderTargets,  uint32_t numDSModes, RHI::DepthStencilMode* dsMode, uint32_t numBlendModes, RHI::BlendMode* blendModes, uint32_t numRasterizerModes, RHI::RasterizerMode* rsModes, const char* GS,const char* HS,   const char* DS)
+void Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderCreateDesc& desc, std::string_view VS, std::string_view PS, uint32_t numRenderTargets,  uint32_t numDSModes, RHI::DepthStencilMode* dsMode, uint32_t numBlendModes, RHI::BlendMode* blendModes, uint32_t numRasterizerModes, RHI::RasterizerMode* rsModes, std::string_view GS,std::string_view HS, std::string_view DS)
 {
 	memset(&desc, 0, sizeof(ShaderCreateDesc));
-	desc.VS = RHI::ShaderCode{ {(char*)VS}, 0 };
-	desc.PS = RHI::ShaderCode{ {(char*)PS}, 0 };
-	desc.GS = RHI::ShaderCode{ {(char*)GS}, 0 };
-	desc.HS = RHI::ShaderCode{ {(char*)HS}, 0 };
-	desc.DS = RHI::ShaderCode{ {(char*)DS}, 0 };
+	desc.VS = RHI::ShaderCode{ VS};
+	desc.PS = RHI::ShaderCode{ PS};
+	desc.GS = RHI::ShaderCode{ GS};
+	desc.HS = RHI::ShaderCode{ HS};
+	desc.DS = RHI::ShaderCode{ DS};
 	desc.NumRenderTargets = numRenderTargets;
 	desc.numDepthStencilModes = numDSModes;
 	desc.numBlendModes = numBlendModes;
