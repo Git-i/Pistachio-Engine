@@ -111,38 +111,62 @@ sources = [
 tests_src = [
     'tests/script_test.cpp'
 ]
+shaders_dir = 'src/Pistachio/Renderer/shaders/'
 vertex_shaders = [
-    'src/Pistachio/Renderer/shaders/vertex/prefilter_vs.hlsl',
-    'src/Pistachio/Renderer/shaders/vertex/StandaloneVertexShader.hlsl',
-    'src/Pistachio/Renderer/shaders/vertex/vertex_shader_no_transform.hlsl',
-    'src/Pistachio/Renderer/shaders/vertex/equirectangular_to_cubemap_vs.hlsl',
-    'src/Pistachio/Renderer/shaders/vertex/Shadow_vs.hlsl',
-    'src/Pistachio/Renderer/shaders/vertex/VertexShader.hlsl'
+    'prefilter_vs.hlsl',
+    'StandaloneVertexShader.hlsl',
+    'vertex_shader_no_transform.hlsl',
+    'equirectangular_to_cubemap_vs.hlsl',
+    'Shadow_vs.hlsl',
+    'VertexShader.hlsl'
 ]
 pixel_shaders = [
-    'src/Pistachio/Renderer/shaders/pixel/background_ps.hlsl',
-    'src/Pistachio/Renderer/shaders/pixel/CFPBRShader_ps.hlsl',
-    'src/Pistachio/Renderer/shaders/pixel/equirectangular_to_cubemap_fs.hlsl',
-    'src/Pistachio/Renderer/shaders/pixel/irradiance_fs.hlsl',
-    'src/Pistachio/Renderer/shaders/pixel/prefilter_fs.hlsl',
-    'src/Pistachio/Renderer/shaders/pixel/Shadow_ps.hlsl',
+    'background_ps.hlsl',
+    'CFPBRShader_ps.hlsl',
+    'equirectangular_to_cubemap_fs.hlsl',
+    'irradiance_fs.hlsl',
+    'prefilter_fs.hlsl',
+    'Shadow_ps.hlsl',
 ]
 compute_shaders = [
-    'src/Pistachio/Renderer/shaders/compute/BRDF_LUT_cs.hlsl',
-    'src/Pistachio/Renderer/shaders/compute/CFActiveClusters_cs.hlsl',
-    'src/Pistachio/Renderer/shaders/compute/CFBuildClusters_cs.hlsl',
-    'src/Pistachio/Renderer/shaders/compute/CFCullLights_cs.hlsl',
-    'src/Pistachio/Renderer/shaders/compute/CFTightenList_cs.hlsl',
-    'src/Pistachio/Renderer/shaders/compute/EqToCubeMap_cs.hlsl',
+    'BRDF_LUT_cs.hlsl',
+    'CFActiveClusters_cs.hlsl',
+    'CFBuildClusters_cs.hlsl',
+    'CFCullLights_cs.hlsl',
+    'CFTightenList_cs.hlsl',
+    'EqToCubeMap_cs.hlsl',
     #'src/Pistachio/Renderer/shaders/compute/Irradiance_cs.hlsl',
 ]
-shader_gen = generator(rhi_sc_exe, arguments: ['@INPUT@', '-o', '@OUTPUT@', '-ONone', '-g', '@EXTRA_ARGS@'],  output: ['@BASENAME@.rbc'])
 
-vs_compiled = shader_gen.process(vertex_shaders, extra_args: ['-t', 'vertex'])
-ps_compiled = shader_gen.process(pixel_shaders, extra_args: ['-t', 'pixel'])
-cs_compiled = shader_gen.process(compute_shaders, extra_args: ['-t', 'compute'])
+vs_args = [rhi_sc_exe, '-i', '@INPUT@', '-o', '@OUTPUT@', '-ONone', '-g', '-t', 'vertex']
+ps_args = [rhi_sc_exe, '-i', '@INPUT@', '-o', '@OUTPUT@', '-ONone', '-g', '-t', 'pixel']
+cs_args = [rhi_sc_exe, '-i', '@INPUT@', '-o', '@OUTPUT@', '-ONone', '-g', '-t', 'compute']
 
-custom_target('Shaders', command:['cd'], input: [vs_compiled, ps_compiled, cs_compiled], output: ['shaders'])
+vs_output = []
+vs_input = []
+
+ps_output = []
+ps_input = []
+
+cs_output = []
+cs_input = []
+
+foreach shader : vertex_shaders
+    vs_output += (shader.substring(0, -5) + '.rbc') #replace .hlsl with .rbc
+    vs_input += shaders_dir / 'vertex' / shader
+endforeach
+foreach shader : pixel_shaders
+    ps_output += (shader.substring(0, -5) + '.rbc')
+    ps_input += shaders_dir / 'pixel' / shader
+endforeach
+foreach shader : compute_shaders
+    cs_output += (shader.substring(0, -5) + '.rbc')
+    cs_input += shaders_dir / 'compute' / shader
+endforeach
+custom_target('Vertex Shaders', command: vs_args, input: vs_input,output: vs_output)
+custom_target('Pixel Shaders', command: ps_args, input: ps_input,output: ps_output)
+custom_target('Compute Shaders', command: ps_args, input: cs_input, output: cs_output)
+
 if(build_machine.system() == 'linux')
     deps += glfw3_dep
     args += '-DUSE_GLFW'
