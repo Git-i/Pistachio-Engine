@@ -2,6 +2,7 @@
 #include "ptpch.h"
 #include "ShaderAsset.h"
 #include "Pistachio/Utils/PlatformUtils.h"
+#include <string_view>
 namespace Pistachio
 {
     std::vector<char>      ShaderAsset::vs;
@@ -106,8 +107,8 @@ namespace Pistachio
         rsMode.fillMode = RHI::FillMode::Solid;
         rsMode.topology = RHI::PrimitiveTopology::TriangleList;
         ShaderCreateDesc desc{};
-        desc.VS = {{vs.data()}  ,(uint32_t)vs.size()};
-        desc.PS = {{code.data()},(uint32_t)code.size()};
+        desc.VS = {std::string_view{vs.data()  ,(uint32_t)vs.size()}};
+        desc.PS = {std::string_view{code.data(),(uint32_t)code.size()}};
         desc.BlendModes = &blendMode;
         desc.DepthStencilModes = &dsMode;
         desc.RasterizerModes = &rsMode;

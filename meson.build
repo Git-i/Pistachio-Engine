@@ -165,7 +165,7 @@ foreach shader : compute_shaders
 endforeach
 custom_target('Vertex Shaders', command: vs_args, input: vs_input,output: vs_output)
 custom_target('Pixel Shaders', command: ps_args, input: ps_input,output: ps_output)
-custom_target('Compute Shaders', command: ps_args, input: cs_input, output: cs_output)
+custom_target('Compute Shaders', command: cs_args, input: cs_input, output: cs_output)
 
 if(build_machine.system() == 'linux')
     deps += glfw3_dep
