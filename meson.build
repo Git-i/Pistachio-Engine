@@ -113,6 +113,7 @@ tests_src = [
 ]
 shaders_dir = 'src/Pistachio/Renderer/shaders/'
 vertex_shaders = [
+    'background_vs.hlsl',
     'prefilter_vs.hlsl',
     'StandaloneVertexShader.hlsl',
     'vertex_shader_no_transform.hlsl',

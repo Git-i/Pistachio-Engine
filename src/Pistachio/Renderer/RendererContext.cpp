@@ -251,7 +251,7 @@ namespace Pistachio
 
 
 		BrdfTex.CreateStack(512, 512, RHI::Format::R16G16_FLOAT, nullptr PT_DEBUG_REGION(,"Renderer -> White Texture"),TextureFlags::Compute);
-		ComputeShader* brdfShader = ComputeShader::Create({shader_dir + "BRDF_LUT_cs" },RHI::ShaderMode::File);
+		ComputeShader* brdfShader = ComputeShader::Create({shader_dir + "BRDF_LUT_cs.rbc" },RHI::ShaderMode::File);
 
 		ShaderDesc.DepthStencilModes->DepthWriteMask = RHI::DepthWriteMask::None;
 		ShaderDesc.RasterizerModes->cullMode = RHI::CullMode::None;
