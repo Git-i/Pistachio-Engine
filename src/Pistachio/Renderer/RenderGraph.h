@@ -1,6 +1,7 @@
 #pragma once
 #include "Barrier.h"
 #include "CommandList.h"
+#include "FormatsAndTypes.h"
 #include "Texture.h"
 #include "Shader.h"
 #include "RenderTexture.h"
@@ -46,7 +47,7 @@ namespace Pistachio
 		friend void FillBufferBarrier(RGBuffer&, BufferAttachmentInfo&,
 			std::vector<RHI::BufferMemoryBarrier>&, std::vector<RHI::BufferMemoryBarrier>&,
         	RHI::ResourceAcessFlags (*)(AttachmentUsage),
-			RHI::QueueFamily);
+			RHI::QueueFamily,RHI::PipelineStage);
 		RGBuffer(RHI::Ptr<RHI::Buffer> _buffer, uint32_t _offset, uint32_t _size, RHI::QueueFamily family, RHI::ResourceAcessFlags access) :
 			buffer(_buffer),
 			currentAccess(access),
@@ -61,7 +62,7 @@ namespace Pistachio
 		uint32_t offset;
 		uint32_t size;
 		uint32_t numInstances;
-		RHI::GraphicsCommandList* producer = nullptr;
+		RHI::PipelineStage stage;
 	};
 	struct AttachmentInfo;
 	class PISTACHIO_API RGTexture
@@ -91,7 +92,7 @@ namespace Pistachio
 			std::vector<RHI::TextureMemoryBarrier>&, std::vector<RHI::TextureMemoryBarrier>&,
 			RHI::ResourceLayout (*)(AttachmentUsage),
         	RHI::ResourceAcessFlags (*)(AttachmentUsage),
-			RHI::QueueFamily,bool);
+			RHI::QueueFamily,RHI::PipelineStage,bool);
 		RGTexture(RHI::Ptr<RHI::Texture> _texture, RHI::ResourceLayout layout, RHI::QueueFamily family, uint32_t MipSlice, bool isArray, uint32_t Slice, uint32_t numSlices,uint32_t numMips, RHI::ResourceAcessFlags access) :
 			texture(_texture),
 			current_layout(layout),
@@ -117,7 +118,7 @@ namespace Pistachio
 		RTVHandle rtvHandle = { UINT32_MAX, UINT32_MAX };
 		DSVHandle dsvHandle = { UINT32_MAX, UINT32_MAX };//for output resources
 		uint32_t numInstances;
-		RHI::GraphicsCommandList* producer;
+		RHI::PipelineStage stage = RHI::PipelineStage::TOP_OF_PIPE_BIT;
 
 	};
 	struct PISTACHIO_API RGTextureInstance
@@ -196,7 +197,7 @@ namespace Pistachio
 		std::function<void(RHI::Weak<RHI::GraphicsCommandList> list)> pass_fn;
 	private:
 		friend class RenderGraph;
-		RHI::PipelineStage stage;
+		RHI::PipelineStage stage = RHI::PipelineStage::TOP_OF_PIPE_BIT;
 		RHI::Area2D area;
 		const char* name;
 		RHI::Ptr<RHI::PipelineStateObject> pso = nullptr;

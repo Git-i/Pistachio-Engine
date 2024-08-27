@@ -439,6 +439,7 @@ namespace Pistachio
         RHI::ResourceLayout layout_fn(AttachmentUsage),
         RHI::ResourceAcessFlags access_fn(AttachmentUsage),
         RHI::QueueFamily srcQueue,
+        RHI::PipelineStage stg,
         bool isDepth = false)
     {
         if(info.usage == AttachmentUsage::PassThrough) return false;
@@ -483,13 +484,15 @@ namespace Pistachio
         tex.currentFamily = srcQueue;
         tex.current_layout = barrier.newLayout;
         tex.currentAccess = barrier.AccessFlagsAfter;
+        tex.stage = stg;
         return true;
     }
     void FillBufferBarrier(RGBuffer& buff, BufferAttachmentInfo& info,
         std::vector<RHI::BufferMemoryBarrier>& barriers,
         std::vector<RHI::BufferMemoryBarrier>& release,
         RHI::ResourceAcessFlags access_fn(AttachmentUsage),
-        RHI::QueueFamily srcQueue)
+        RHI::QueueFamily srcQueue,
+        RHI::PipelineStage stg)
     {
         if(info.usage == AttachmentUsage::PassThrough) return;
         auto& barrier = barriers.emplace_back();
@@ -518,6 +521,7 @@ namespace Pistachio
         barrier.size = buff.size;
         buff.currentAccess = barrier.AccessFlagsAfter;
         buff.currentFamily = srcQueue;
+        buff.stage = stg;
     }
     enum AttachmentType
     {
@@ -612,7 +616,6 @@ namespace Pistachio
         RHI::PipelineStage& stage)
     {
         PT_PROFILE_FUNCTION();
-        PT_CORE_INFO("Beginning RenderGraph Level Execution");
         std::vector<RHI::TextureMemoryBarrier> textureRelease;
         std::vector<RHI::BufferMemoryBarrier> bufferRelease;
         uint32_t j = levelInd == 0 ? 0 : levelTransitionIndices[levelInd - 1].first;
@@ -623,9 +626,8 @@ namespace Pistachio
             PassTy* pass = passes[j].first;
             RHI::PipelineStage pass_stg;
             if constexpr(std::is_same_v<RenderPass, PassTy>) pass_stg = pass->stage; else pass_stg = RHI::PipelineStage::COMPUTE_SHADER_BIT;
-            PT_CORE_VERBOSE("Pass {0} (name: {1}, queue: {2}): Before: {3}, After: {4}", j, pass->name, ENUM_FMT(srcQueue), ENUM_FMT(stage), ENUM_FMT(pass_stg));
-            std::vector<RHI::TextureMemoryBarrier> barriers;
-            std::vector<RHI::BufferMemoryBarrier> bufferBarriers;
+            std::unordered_map<RHI::PipelineStage, std::vector<RHI::TextureMemoryBarrier>> barriers;
+            std::unordered_map<RHI::PipelineStage, std::vector<RHI::BufferMemoryBarrier>> bufferBarriers;
             barriers.reserve(pass->inputs.size() + pass->outputs.size());
             bufferBarriers.reserve(pass->bufferInputs.size() + pass->bufferOutputs.size());
             RHI::RenderingBeginDesc rbDesc{};
@@ -633,14 +635,11 @@ namespace Pistachio
             std::vector<RHI::RenderingAttachmentDesc> attachments;
             attachments.reserve(pass->outputs.size());
             
-            PT_CORE_VERBOSE("Texture Inputs:");
             for (auto& input : pass->inputs)
             {
-                LogAttachmentHeader(input);
-                LogAttachmentBody(input, textures);
-                LogTextureBarrier(
-                    FillTextureBarrier(textures[input.texture.texOffset], input, barriers, textureRelease, InputLayout, InputDstAccess, srcQueue),
-                    barriers);
+                RGTexture& tex = textures[input.texture.texOffset];
+                FillTextureBarrier(tex, input, barriers[tex.stage], textureRelease, InputLayout, InputDstAccess, srcQueue, pass_stg);
+                
                 LogAttachmentBody(input, textures);
             }
             PT_CORE_VERBOSE("Texture Outputs:");
@@ -648,12 +647,7 @@ namespace Pistachio
             {
                 RGTexture& tex = textures[output.texture.texOffset];
                 if (output.usage == AttachmentUsage::Graphics) FillAttachment<AttachRT>(output, attachments, tex);
-                LogAttachmentHeader(output);
-                LogAttachmentBody(output, textures);
-                LogTextureBarrier(
-                    FillTextureBarrier(tex, output, barriers, textureRelease, OutputLayout, OutputDstAccess, srcQueue),
-                    barriers);
-                LogAttachmentBody(output, textures);
+                FillTextureBarrier(tex, output, barriers[tex.stage], textureRelease, OutputLayout, OutputDstAccess, srcQueue, pass_stg);
             }
             if constexpr (std::is_same_v<PassTy, RenderPass>)
             {
@@ -665,27 +659,50 @@ namespace Pistachio
                         FillAttachment<AttachDS>(pass->dsOutput, attachments, textures[pass->dsOutput.texture.texOffset]);
                         rbDesc.pDepthStencilAttachment = &attachments.back();
                     }
-                    FillTextureBarrier(tex, pass->dsOutput, barriers, textureRelease, OutputLayout, OutputDstAccess, srcQueue, true);
+                    FillTextureBarrier(tex, pass->dsOutput, barriers[tex.stage], textureRelease, OutputLayout, OutputDstAccess, srcQueue,pass_stg, true);
                 }
             }
             
             for (auto& input : pass->bufferInputs)
-                FillBufferBarrier(buffers[input.buffer.buffOffset], input, bufferBarriers, bufferRelease, InputDstAccess, srcQueue);
+            {
+                RGBuffer& buff = buffers[input.buffer.buffOffset];
+                FillBufferBarrier(buff, input, bufferBarriers[buff.stage], bufferRelease, InputDstAccess, srcQueue, pass_stg);
+            }
             for (auto& output : pass->bufferOutputs)
-                FillBufferBarrier(buffers[output.buffer.buffOffset], output, bufferBarriers, bufferRelease, OutputDstAccess, srcQueue);
+            {
+                RGBuffer& buff = buffers[output.buffer.buffOffset];
+                FillBufferBarrier(buff, output, bufferBarriers[buff.stage], bufferRelease, OutputDstAccess, srcQueue, pass_stg);
+            }
             rbDesc.pColorAttachments = attachments.data();
             rbDesc.numColorAttachments = attachments.size() - (rbDesc.pDepthStencilAttachment ? 1 : 0);
             
-            currentList->PipelineBarrier(stage, pass_stg, bufferBarriers, barriers);
+            for(auto&[curr_stage, barrier] : barriers)
+            {
+                std::span textures_span = barrier;
+                std::span<RHI::BufferMemoryBarrier> buffers_span = {};
+                if(bufferBarriers.contains(curr_stage)) buffers_span = bufferBarriers[curr_stage];
+                if(textures_span.size() || buffers_span.size())
+                {
+                    currentList->PipelineBarrier(curr_stage, pass_stg, buffers_span, textures_span);
+                }
+                if(buffers_span.size()) bufferBarriers.erase(curr_stage);
+            }
+
+            for(auto&[curr_stage, barrier] : bufferBarriers)
+                if(barrier.size())
+                    currentList->PipelineBarrier(curr_stage, pass_stg, barrier, {});
+            
             if constexpr (std::is_same_v<PassTy, RenderPass>) if (pass->pso.IsValid()) currentList->SetPipelineState(pass->pso);
             if constexpr (std::is_same_v<PassTy, ComputePass>) if (pass->computePipeline.IsValid()) currentList->SetComputePipeline(pass->computePipeline);
             if (pass->rsig.IsValid()) currentList->SetRootSignature(pass->rsig);
+
             {
                 if (std::is_same_v<PassTy, RenderPass> && attachments.size()) currentList->BeginRendering(rbDesc);
                 TraceRHIZone("RenderGraph", currentList, RendererBase::TraceContext());
                 pass->pass_fn(currentList);
                 stage = pass_stg;
             }
+
             if (std::is_same_v<PassTy, RenderPass> && attachments.size()) currentList->EndRendering();
         }
         constexpr auto stg = std::is_same_v<PassTy, RenderPass> ?  RHI::PipelineStage::COMPUTE_SHADER_BIT : RHI::PipelineStage::ALL_GRAPHICS_BIT;
