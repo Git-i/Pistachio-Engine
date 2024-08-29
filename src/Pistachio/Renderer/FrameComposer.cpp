@@ -31,6 +31,8 @@ namespace Pistachio
 	void FrameComposer::Compose(Scene** scenes, uint32_t count)
 	{
 		if (Application::Get().IsHeadless()) { PT_CORE_ERROR("Cannot Compose On Headless App"); return; }
+		auto& base = Application::Get().GetRendererBase();
+		auto& window = Application::Get().GetWindow();
 		if (mode == CompositionMode::SimpleCopy)
 		{
 			unsigned int height = ((WindowData*)GetWindowDataPtr())->height;
@@ -49,8 +51,8 @@ namespace Pistachio
 					range.NumArraySlices = 1;
 					range.NumMipLevels = 1;
 					range.imageAspect = RHI::Aspect::COLOR_BIT;
-					RendererBase::mainCommandList->BlitTexture(scenes[index]->finalRender.GetID(),
-						RendererBase::backBufferTextures[RendererBase::currentRTVindex],
+					base.mainCommandList->BlitTexture(scenes[index]->finalRender.GetID(),
+						window.GetSwapChain().swapTextures[window.GetSwapChain().swapchain->GetImageIndex()],
 						srcSize, { 0,0,0 },
 						dstSize, { (int)(x * dstSize.width), (int)(y * dstSize.height),0 },
 						range, range);

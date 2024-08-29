@@ -23,7 +23,7 @@ namespace Pistachio
         desc.usage |= ((flags & TextureFlags::Compute) != TextureFlags::None) ? RHI::TextureUsage::StorageImage : RHI::TextureUsage::None;
         RHI::AutomaticAllocationInfo allocInfo;
         allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        m_ID = RendererBase::device->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+        m_ID = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
         range.imageAspect = RHI::Aspect::COLOR_BIT;
@@ -42,7 +42,7 @@ namespace Pistachio
             barrier.nextQueue = RHI::QueueFamily::Graphics;
             barrier.subresourceRange = range;
             barrier.texture = m_ID;
-            RendererBase::stagingCommandList->PipelineBarrier(
+            RendererBase::Get().stagingCommandList->PipelineBarrier(
                 RHI::PipelineStage::TOP_OF_PIPE_BIT,
                 RHI::PipelineStage::TRANSFER_BIT,
                 {},
@@ -52,7 +52,7 @@ namespace Pistachio
             barrier.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
             barrier.newLayout = RHI::ResourceLayout::SHADER_READ_ONLY_OPTIMAL;
             barrier.oldLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL;
-            RendererBase::stagingCommandList->PipelineBarrier(
+            RendererBase::Get().stagingCommandList->PipelineBarrier(
                 RHI::PipelineStage::TRANSFER_BIT,
                 RHI::PipelineStage::FRAGMENT_SHADER_BIT,
                 {},
@@ -63,7 +63,7 @@ namespace Pistachio
         viewDesc.range = range;
         viewDesc.texture = m_ID;
         viewDesc.type = RHI::TextureViewType::Texture2D;
-        m_view = RendererBase::device->CreateTextureView(viewDesc).value();
+        m_view = RendererBase::GetDevice()->CreateTextureView(viewDesc).value();
     }
     RHI::Format Texture2D::GetFormat() const
     {

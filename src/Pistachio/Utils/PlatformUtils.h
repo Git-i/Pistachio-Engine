@@ -1,7 +1,9 @@
 #pragma once
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <algorithm>
+#include "Pistachio/Core.h"
 namespace Pistachio {
 	class PISTACHIO_API FileDialogs {
 	public:
@@ -20,7 +22,7 @@ namespace Pistachio {
 			static_assert(std::is_integral_v<T>, "T must be an integral type");
 			static_assert(std::has_unique_object_representations_v<T>, "T may not have padding bits");
 			std::array<uint8_t, sizeof(T)> value_representation;
-			for (int i = 0; i < sizeof(T); i++)
+			for (uint32_t i = 0; i < sizeof(T); i++)
 			{
 				memcpy(value_representation.data() + i, (uint8_t*)(&value) + i, 1);
 			}

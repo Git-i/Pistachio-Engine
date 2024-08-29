@@ -119,21 +119,21 @@ namespace Pistachio
         desc.usage = RHI::BufferUsage::CopyDst | RHI::BufferUsage::CopySrc | usage;
         RHI::AutomaticAllocationInfo info;
         info.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        buffer = RendererBase::Get3dDevice()->CreateBuffer(desc, nullptr, nullptr, &info, 0, RHI::ResourceType::Automatic).value();
+        buffer = RendererBase::GetDevice()->CreateBuffer(desc, nullptr, nullptr, &info, 0, RHI::ResourceType::Automatic).value();
         allocator.Initialize(initialSize);
     }
     
     void FrameResource::Initialize(uint32_t cbCapacity)
     {
         transformBuffer.CreateStack(nullptr, cbCapacity);
-        transformBufferDesc = RendererBase::Get3dDevice()->CreateDynamicDescriptor(
+        transformBufferDesc = RendererBase::GetDevice()->CreateDynamicDescriptor(
 				RendererBase::GetMainDescriptorHeap(),
 				RHI::DescriptorType::ConstantBufferDynamic,
 				RHI::ShaderStage::Vertex,
 				transformBuffer.GetID(),
 				0,
 				256).value();
-	    transformBufferDescPS = RendererBase::Get3dDevice()->CreateDynamicDescriptor(
+	    transformBufferDescPS = RendererBase::GetDevice()->CreateDynamicDescriptor(
 				RendererBase::GetMainDescriptorHeap(),
 				RHI::DescriptorType::ConstantBufferDynamic,
 				RHI::ShaderStage::Pixel,

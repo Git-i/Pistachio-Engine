@@ -23,8 +23,8 @@ namespace Pistachio {
 	public:
 		static RenderTexture* Create(uint32_t width, uint32_t height, uint32_t mipLevels, RHI::Format format PT_DEBUG_REGION(,const char* name));
 		void CreateStack(uint32_t width, uint32_t height, uint32_t mipLevels, RHI::Format format PT_DEBUG_REGION(,const char* name));
-		void SwitchToRenderTargetMode(RHI::GraphicsCommandList* list);
-		void SwitchToShaderUsageMode( RHI::GraphicsCommandList* list);
+		[[deprecated]] void SwitchToRenderTargetMode(RHI::GraphicsCommandList* list);
+		[[deprecated]] void SwitchToShaderUsageMode( RHI::GraphicsCommandList* list);
 		RHI::Ptr<RHI::TextureView> GetView()  const{ return m_view; }
 		RHI::Format GetFormat() const override;
 		RHI::Ptr<RHI::Texture> GetID() const { return m_ID; }

@@ -19,6 +19,7 @@ namespace YAML {
 			node.push_back(v.x);
 			node.push_back(v.y);
 			node.push_back(v.z);
+			return node;
 		}
 
 		static bool decode(const Node& node, DirectX::XMFLOAT3& v)
@@ -40,6 +41,7 @@ namespace YAML {
 			node.push_back(v.y);
 			node.push_back(v.z);
 			node.push_back(v.w);
+			return node;
 		}
 
 		static bool decode(const Node& node, DirectX::XMFLOAT4& v)

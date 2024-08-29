@@ -1,10 +1,9 @@
-#include "ptpch.h"
+#include "Pistachio/Core/Window.h"
+#include "Pistachio/Renderer/RendererBase.h"
 #include "Pistachio/Core/Log.h"
 #include "Pistachio/Core/Application.h"
 #include "Pistachio/Event/Event.h"
-#include "Pistachio/Core/KeyCodes.h"
 #include "Pistachio/Core/Input.h"
-#include "Pistachio/Physics/Physics.h"
 #include "Pistachio/Renderer/Renderer2D.h"
 #include "imgui.h"
 #include "tracy/Tracy.hpp"
@@ -20,7 +19,6 @@ namespace Pistachio {
 		m_headless = opt.headless;
 		Pistachio::Log::Init(opt.log_file_name);
 		RendererBase::InitOptions ropt;
-		ropt.headless = opt.headless;
 		ropt.luid = opt.gpu_luid;
 		ropt.exportTexture = opt.exportTextures;
 		ropt.custom_device = opt.custom_device;
@@ -32,6 +30,9 @@ namespace Pistachio {
 		ropt.indices = opt.indices;
 		ropt.custom_fn = std::move(opt.select_physical_device);
 		shaderDir = opt.shader_dir;
+		if(!opt.headless) Window_PreGraphicsInit();
+		m_rendererBase = std::make_unique<RendererBase>();
+		m_rendererBase->Init(ropt);
 		if (!opt.headless)
 		{
 			WindowInfo info;
@@ -42,10 +43,11 @@ namespace Pistachio {
 			m_Window = Scope<Window>(Window::Create(info));
 			m_Window->SetEventCallback(BIND_EVENT_FN(Application::OnEvent));
 			handler = std::unique_ptr<InputHandler>(CreateDefaultInputHandler());
-			RendererBase::Init(&m_Window->pd, ropt);
 		}
-		else RendererBase::Init(NULL, ropt);
-		Renderer::Init("resources/textures/hdr/golden_bay_1k.hdr");
+
+		m_renderer = std::make_unique<Renderer>();
+		m_renderer->Init();
+
 		Renderer2D::Init();
 		std::cout << "phys time" << std::endl;
 		//Physics::Init();
@@ -102,7 +104,7 @@ namespace Pistachio {
 			m_minimized = true;
 		else
 		{
-			RendererBase::Resize(e.GetWidth(), e.GetHeight());
+			//TODO window resize
 			m_minimized = false;
 		}
 		return false;
@@ -129,7 +131,6 @@ namespace Pistachio {
 				break;
 
 
-			m_Window->OnUpdate(delta.count());
 			if (!m_minimized) {
 				for (Layer* layer : m_layerstack)
 					layer->OnUpdate(delta.count());
@@ -137,6 +138,7 @@ namespace Pistachio {
 			for (Layer* layer : m_layerstack)
 				layer->OnImGuiRender();
 			Renderer::EndScene();
+			m_Window->OnUpdate(delta.count());
 		}
 		
 	}

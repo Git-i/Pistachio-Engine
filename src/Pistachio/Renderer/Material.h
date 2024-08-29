@@ -8,7 +8,6 @@
 #include "BufferHandles.h"
 #include "ShaderAsset.h"
 #include "Texture.h"
-#include "Buffer.h"
 #include "Renderer.h"
 #include "../Core.h"
 namespace Pistachio
@@ -48,7 +47,7 @@ namespace Pistachio
 	template<typename ParamTy, uint32_t components, typename checkTy, typename shaderTy>
 	inline void CheckAndUpdate(const ParamTy& value, Pistachio::ParamInfo& info, RendererCBHandle handle,void* cpu)
 	{
-		PT_CORE_ASSERT(std::is_convertible_v<ParamTy, checkTy>);
+		//PT_CORE_ASSERT1(std::is_convertible_v<ParamTy, checkTy>);
 		shaderTy data[components];
 		if constexpr (components == 1) { data[0] = (shaderTy)value; }
 		else

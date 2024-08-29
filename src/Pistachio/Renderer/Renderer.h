@@ -63,7 +63,7 @@ namespace Pistachio {
 	public:
 		static void Shutdown();
 		static void ChangeSkybox(const char* filename);
-		static void Init(const char* skybox);
+		static void Init();
 		static void EndScene();
 		static void Submit(Mesh* mesh, Shader* shader,  Material* mat, int ID);
 		static void FreeVertexBuffer(const RendererVBHandle handle);
@@ -82,6 +82,8 @@ namespace Pistachio {
 		static void  Submit(RHI::Weak<RHI::GraphicsCommandList> list, const RendererVBHandle vb, const RendererIBHandle ib, uint32_t vertexStride);
 		static RenderCubeMap& GetSkybox();
 		static SamplerHandle GetDefaultSampler();
+		static SamplerHandle GetShadowSampler();
+		static Texture2D& GetBrdfTexture();
 		static const RHI::Ptr<RHI::DynamicDescriptor> GetCBDesc();
 		static const RHI::Ptr<RHI::DynamicDescriptor> GetCBDescPS();
 		static uint32_t GetCounterValue();
@@ -110,22 +112,6 @@ namespace Pistachio {
 		static void DefragmentConstantBuffer();
 	private:
 		friend class Scene;
-		static RendererContext ctx;
-		//-----------OLD-STUFF---------------
-		/*
-		static DirectX::XMMATRIX viewproj;
-		static DirectX::XMVECTOR m_campos;
-		static struct CamerData { DirectX::XMMATRIX viewProjection; DirectX::XMMATRIX view;  DirectX::XMFLOAT4 viewPos; }CameraData;
-		static Texture2D whiteTexture;
-		static std::vector<RegularLight> RegularLightData;
-		static std::vector<ShadowCastingLight> ShadowLightData;
-		static std::vector<std::uint8_t> LightSBCPU;
-		static Material* currentMat;
-		static Shader* currentShader;
-		static DepthTexture shadowMapAtlas;
-		friend class Scene;
-		friend class Material;
-		static Shader* brdfShader;
-		*/
+		RendererContext ctx;
 	};
 }

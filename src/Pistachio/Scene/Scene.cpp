@@ -164,7 +164,7 @@ namespace Pistachio {
 			
 		}
 		shd_fwd->GetShaderBinding(sceneInfo, 2);
-		sceneInfo.UpdateTextureBinding(Renderer::ctx.BrdfTex.GetView(), 0);
+		sceneInfo.UpdateTextureBinding(Renderer::GetBrdfTexture().GetView(), 0);
 		sceneInfo.UpdateTextureBinding(irSkybox.GetView(), 1);
 		sceneInfo.UpdateTextureBinding(pfSkybox.GetView(), 2);
 		sceneInfo.UpdateTextureBinding(shadowMapAtlas.GetView(), 3);
@@ -173,9 +173,9 @@ namespace Pistachio {
 		sceneInfo.UpdateBufferBinding(lightList.GetID(), 0, lightListSize, RHI::DescriptorType::StructuredBuffer, 5);
 		sceneInfo.UpdateBufferBinding(sparseActiveClustersBuffer_lightIndices.GetID(), 0, sizeof(uint32_t) * numClusters * 50, RHI::DescriptorType::StructuredBuffer, 6);
 
-		sceneInfo.UpdateSamplerBinding(Renderer::ctx.defaultSampler, 7);
-		sceneInfo.UpdateSamplerBinding(Renderer::ctx.defaultSampler, 8);
-		sceneInfo.UpdateSamplerBinding(Renderer::ctx.shadowSampler, 9);
+		sceneInfo.UpdateSamplerBinding(Renderer::GetDefaultSampler(), 7);
+		sceneInfo.UpdateSamplerBinding(Renderer::GetDefaultSampler(), 8);
+		sceneInfo.UpdateSamplerBinding(Renderer::GetShadowSampler(), 9);
 
 		shd_Shadow->GetShaderBinding(shadowSetInfo, 1);
 		shadowSetInfo.UpdateBufferBinding(lightList.GetID(), 0, lightListSize, RHI::DescriptorType::StructuredBuffer, 0);
@@ -758,7 +758,7 @@ namespace Pistachio {
 		passConstants.numShadowLights = shadowLights.size();
 		passConstants.EyePosW = camPos;
 		passConstants.DeltaTime = delta;
-		passCB[RendererBase::currentFrameIndex].Update(&passConstants, sizeof(PassConstants), 0);
+		passCB[RendererBase::GetCurrentFrameIndex()].Update(&passConstants, sizeof(PassConstants), 0);
 	}
 	void Scene::UpdatePassConstants(const EditorCamera& cam, float delta)
 	{
@@ -784,7 +784,7 @@ namespace Pistachio {
 		passConstants.numShadowLights = shadowLights.size();
 		passConstants.EyePosW = cam.GetPosition();
 		passConstants.DeltaTime = delta;
-		passCB[RendererBase::currentFrameIndex].Update(&passConstants, sizeof(PassConstants), 0);
+		passCB[RendererBase::GetCurrentFrameIndex()].Update(&passConstants, sizeof(PassConstants), 0);
 	}
 	const RenderTexture& Scene::GetFinalRender()
 	{
@@ -1154,7 +1154,7 @@ namespace Pistachio {
 		barr[0].texture = finalRender.GetID();
 		barr[0].subresourceRange = range;
 
-		RendererBase::mainCommandList->PipelineBarrier(RHI::PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT,
+		RendererBase::GetMainCommandList()->PipelineBarrier(RHI::PipelineStage::COLOR_ATTACHMENT_OUTPUT_BIT,
 			RHI::PipelineStage::TRANSFER_BIT, {}, {barr,1});
 
 		//notify render graph of layout change

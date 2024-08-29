@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Ptr.h"
+#include "Surface.h"
+#include "SwapChain.h"
+#include "Texture.h"
 #include "ptpch.h"
 #include "Pistachio/Core.h"
 #include "Pistachio/Event/Event.h"
@@ -41,6 +45,21 @@ using EventCallbackFn = std::function<void(Pistachio::Event& e)>;
 			WindowInfo(unsigned int w = 1280, unsigned int h = 720, const char* t = "Pistachio Engine", unsigned int Vsync = 1)
 				: width(w), height(h), title(t), vsync(Vsync) {}
 		};
+		class PISTACHIO_API SwapChain
+		{
+		public:
+			RHI::Surface surface;
+			RHI::Ptr<RHI::SwapChain> swapchain;
+			void Update();
+			void Initialize(uint32_t width, uint32_t height);
+			std::vector<RHI::Ptr<RHI::Texture>> swapTextures;
+		private:
+			RHI::Ptr<RHI::DescriptorHeap> mainRTVheap;
+			void BackBufferBarrier(RHI::PipelineStage,RHI::PipelineStage,
+				RHI::ResourceLayout,RHI::ResourceLayout,
+				RHI::ResourceAcessFlags,RHI::ResourceAcessFlags);
+		};
+		extern void Window_PreGraphicsInit();
 		class PISTACHIO_API Window
 		{
 		public:
@@ -56,9 +75,12 @@ using EventCallbackFn = std::function<void(Pistachio::Event& e)>;
 			virtual unsigned int IsVsync() const = 0;
 			static Window* Create(const WindowInfo& info = WindowInfo());
 			PlatformData pd;
+			SwapChain& GetSwapChain() {return m_swapChain;}
 		protected:
 			WindowData m_data;
+			SwapChain m_swapChain;
 		};
+		
 		
 	}
 

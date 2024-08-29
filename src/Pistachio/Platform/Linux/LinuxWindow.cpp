@@ -3,6 +3,8 @@
 #include "Pistachio/Core/Application.h"
 #include "LinuxWindow.h"
 #include "Pistachio/Core/Log.h"
+#include "Pistachio/Core/Window.h"
+#include "Pistachio/Renderer/RendererBase.h"
 #ifdef IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -44,7 +46,10 @@ void window_close(GLFWwindow* window)
 
 
 namespace Pistachio {
-	
+	void Window_PreGraphicsInit()
+	{
+		glfwInit();
+	}
 	Window* Window::Create(const WindowInfo& info)
 	{
 		return new LinuxWindow(info);
@@ -71,13 +76,15 @@ namespace Pistachio {
 		m_data.width = info.width;
 		m_data.vsync = info.vsync;
 		glfwSetErrorCallback(error_callback);
-		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         pd.window = glfwCreateWindow(info.width, info.height, info.title, NULL, NULL);
         glfwSetKeyCallback(pd.window, key_callback);
         glfwSetCursorPosCallback(pd.window, cursor_position_callback);
         glfwSetScrollCallback(pd.window, scroll_callback);
 		glfwSetWindowCloseCallback(pd.window, window_close);
+
+		m_swapChain.surface.InitGLFW(pd.window, RendererBase::GetInstance()->ID);
+		m_swapChain.Initialize(info.width, info.height);
         return 0;
 	}
 	void LinuxWindow::Shutdown()
@@ -94,6 +101,7 @@ namespace Pistachio {
 			std::string title = std::string("FPS: ") + std::to_string(a);
 			glfwSetWindowTitle(pd.window, title.c_str());
 		#endif // _DEBUG
+		m_swapChain.Update();
         glfwPollEvents();
 	}
 	void LinuxWindow::SetVsync(unsigned int enabled)

@@ -75,6 +75,7 @@ sources = [
     'src/Pistachio/Core/Log.cpp',
     'src/Pistachio/Core/Input.cpp',
     'src/Pistachio/Core/Transform.cpp',
+    'src/Pistachio/Core/SwapChain.cpp',
     'src/Pistachio/Core/InputCallbacks.cpp',
     'src/Pistachio/Scene/CullingManager.cpp',
     'src/Pistachio/Scene/Scene.cpp',
@@ -105,6 +106,7 @@ sources = [
     'src/Pistachio/Scripting/AngelScript/ScriptAPIBase.cpp',
     'src/Pistachio/Scripting/AngelScript/ScriptAPI_ECS.cpp',
     'src/Pistachio/Allocators/AtlasAllocator.cpp',
+    'src/Pistachio/Utils/RendererUtils.cpp',
     'vendor/SimpleMath/SimpleMath.cpp', #we don't need the entire DXTK
     'vendor/stb_image/stb_image.cpp'
 ]

@@ -321,7 +321,7 @@ namespace Pistachio {
 				desc.numRenderTargets = numRenderTargets;
 				memcpy(desc.RTVFormats, rtvFormats, sizeof(RHI::Format) * 6);
 				currentPSO = newHash;
-				PSOs[newHash] = RendererBase::Get3dDevice()->CreatePipelineStateObject(desc).value();
+				PSOs[newHash] = RendererBase::GetDevice()->CreatePipelineStateObject(desc).value();
 				return 0;
 			}
 			return  1;
@@ -414,7 +414,7 @@ namespace Pistachio {
 						PT_CORE_WARN("{0} A disabled state still had valid configuration, this config would be zeroed during comparisons", __FUNCTION__);
 					}
 #endif
-					PSOs[hash] = RendererBase::Get3dDevice()->CreatePipelineStateObject(PSOdesc).value();
+					PSOs[hash] = RendererBase::GetDevice()->CreatePipelineStateObject(PSOdesc).value();
 				}
 			}
 		}
@@ -489,7 +489,7 @@ namespace Pistachio {
 		auto[rsd,_1,_2] = RHI::ShaderReflection::FillRootSignatureDesc(reflections, dynamic_sets, push_block);
 		layouts.resize(rsd.numRootParameters);
 		FillSetInfo(rsd);
-		rootSig = RendererBase::Get3dDevice()->CreateRootSignature(&rsd, layouts.data()).value();
+		rootSig = RendererBase::GetDevice()->CreateRootSignature(&rsd, layouts.data()).value();
 	}
 
 
@@ -506,7 +506,7 @@ namespace Pistachio {
 		updateDesc.numDescriptors = 1;
 		updateDesc.type = type;
 		updateDesc.bufferInfos = &info;
-		RendererBase::Get3dDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
 	}
 
 	void SetInfo::UpdateBufferBinding(const BufferBindingUpdateDesc& desc, uint32_t slot)
@@ -521,7 +521,7 @@ namespace Pistachio {
 		updateDesc.numDescriptors = 1;
 		updateDesc.type = desc.type;
 		updateDesc.bufferInfos = &info;
-		RendererBase::Get3dDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
 	}
 	void SetInfo::UpdateTextureBinding(RHI::Weak<RHI::TextureView> desc, uint32_t slot, RHI::DescriptorType type)
 	{
@@ -533,7 +533,7 @@ namespace Pistachio {
 		updateDesc.numDescriptors = 1;
 		updateDesc.type = type;
 		updateDesc.textureInfos = &info;
-		RendererBase::Get3dDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
 	}
 	void SetInfo::UpdateSamplerBinding(SamplerHandle handle, uint32_t slot)
 	{
@@ -545,7 +545,7 @@ namespace Pistachio {
 		updateDesc.numDescriptors = 1;
 		updateDesc.type = RHI::DescriptorType::Sampler;
 		updateDesc.samplerInfos = &info;
-		RendererBase::Get3dDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
 	}
 
 	bool PSOHash::operator==(const PSOHash& hash) const
@@ -563,7 +563,7 @@ namespace Pistachio {
 		desc.CS = code;
 		desc.mode = mode;
 		desc.rootSig = shader->rSig;
-		shader->pipeline = RendererBase::device->CreateComputePipeline(desc).value();
+		shader->pipeline = RendererBase::GetDevice()->CreateComputePipeline(desc).value();
 		return shader;
 	}
 
@@ -583,7 +583,7 @@ namespace Pistachio {
 			if (m_info.sets[i].setIndex == setIndex) index = i;
 		}
 		info = m_info.sets[index];
-		info.set = RendererBase::device->CreateDescriptorSets(RendererBase::heap, 1, &layouts[index]).value()[0];
+		info.set = RendererBase::CreateDescriptorSet(layouts[index]);
 	}
 
 	void ComputeShader::ApplyShaderBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info)
@@ -603,7 +603,7 @@ namespace Pistachio {
 		desc.CS = code;
 		desc.mode = mode;
 		desc.rootSig = shader->rSig;
-		shader->pipeline = RendererBase::device->CreateComputePipeline(desc).value();
+		shader->pipeline = RendererBase::GetDevice()->CreateComputePipeline(desc).value();
 		return shader;
 	}
 
@@ -614,7 +614,7 @@ namespace Pistachio {
 		else CSReflection[0] = RHI::ShaderReflection::CreateFromMemory(code.data).value();
 		auto[rsd, _1, _2] = RHI::ShaderReflection::FillRootSignatureDesc(CSReflection, {}, std::nullopt);
 		layouts.resize(rsd.numRootParameters);
-		rSig = RendererBase::device->CreateRootSignature(&rsd, layouts.data()).value();
+		rSig = RendererBase::GetDevice()->CreateRootSignature(&rsd, layouts.data()).value();
 		CreateSetInfos(CSReflection[0]);
 	}
 

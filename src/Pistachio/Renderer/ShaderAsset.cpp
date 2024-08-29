@@ -66,7 +66,7 @@ namespace Pistachio
             slot = Edian::ConvertToSystemEndian(slot, Pistachio::Big);
             returnVal->bindingsMap[std::move(bindingName)] = slot;
         }
-        RHI::API api = RendererBase::instance->GetInstanceAPI();
+        RHI::API api = RendererBase::GetAPI();
         uint32_t spvSize = 0;
         infile.read((char*)&spvSize, sizeof(uint32_t));
         spvSize = Edian::ConvertToSystemEndian(spvSize, Pistachio::Big);

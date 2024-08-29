@@ -1,11 +1,9 @@
 #pragma once
-#include "result.hpp"
 #include <memory>
 #ifdef _MSC_VER
 #define PT_DEBUG_BREAK __debugbreak()
 #else
 #include <signal.h>
-
 #define PT_DEBUG_BREAK raise(SIGTRAP);
 #endif
 
@@ -86,7 +84,10 @@ namespace Pistachio {
 	
 }
 #ifdef _DEBUG
-#define PT_CORE_ASSERT(...) if(__VA_ARGS__){}else{PT_CORE_ERROR("Assertion Failed");PT_DEBUG_BREAK}
+#define GET_ASSERT_VER(_1, _2, NAME, ...) NAME
+#define PT_CORE_ASSERT(...) GET_ASSERT_VER(__VA_ARGS__, PT_CORE_ASSERT2, PT_CORE_ASSERT1)(__VA_ARGS__)
+#define PT_CORE_ASSERT1(cond) if(cond){}else{PT_CORE_ERROR("Assertion Failed");PT_DEBUG_BREAK}
+#define PT_CORE_ASSERT2(cond, ...) if(cond){}else{PT_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__);PT_DEBUG_BREAK}
 #else
 #define PT_CORE_ASSERT(...) __VA_ARGS__
 #endif // _DEBUG

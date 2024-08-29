@@ -29,9 +29,9 @@ namespace Pistachio
     }
     RenderGraph::RenderGraph()
     {
-        fence = RendererBase::device->CreateFence(0).value();
-        dbgBufferGFX = RendererBase::device->CreateDebugBuffer().value();
-        dbgBufferCMP = RendererBase::device->CreateDebugBuffer().value();
+        fence = RendererBase::GetDevice()->CreateFence(0).value();
+        dbgBufferGFX = RendererBase::GetDevice()->CreateDebugBuffer().value();
+        dbgBufferCMP = RendererBase::GetDevice()->CreateDebugBuffer().value();
     }
     void RenderGraph::SubmitToQueue()
     {
@@ -39,23 +39,23 @@ namespace Pistachio
         uint32_t maxFenceDiff = 0;
         uint32_t gfxIndex = 0;
         uint32_t cmpIndex = 0;
-        //if(levelTransitionIndices.size()) RendererBase::directQueue->WaitForFence(fence, passesSortedAndFence[0].second + maxFence);
-        //if(computeLevelTransitionIndices.size()) RendererBase::computeQueue->WaitForFence(fence, computePassesSortedAndFence[0].second + maxFence);
+        //if(levelTransitionIndices.size()) RendererBase::GetDirectQueue()->WaitForFence(fence, passesSortedAndFence[0].second + maxFence);
+        //if(computeLevelTransitionIndices.size()) RendererBase::GetComputeQueue()->WaitForFence(fence, computePassesSortedAndFence[0].second + maxFence);
         uint32_t count = textures.size();
         std::vector<Internal_ID> ids;
         for(uint32_t i = 0; i < count; i++)
         {
             ids.push_back(textures[i].texture->ID);
         }
-        if (!RendererBase::MQ)
+        if (!RendererBase::GetComputeQueue().IsValid())
         {
             if (cmdLists.size())
             {
                 cmdLists[0]->End();
-                RendererBase::directQueue->ExecuteCommandLists(&cmdLists[0]->ID, 1);
-                RendererBase::directQueue->SignalFence(fence, ++maxFence);
+                RendererBase::GetDirectQueue()->ExecuteCommandLists(&cmdLists[0]->ID, 1);
+                RendererBase::GetDirectQueue()->SignalFence(fence, ++maxFence);
             }
-            //RESULT res = RendererBase::device->QueueWaitIdle(RendererBase::directQueue);
+            //RESULT res = RendererBase::device->QueueWaitIdle(RendererBase::GetDirectQueue());
             return;
         }
 
@@ -67,18 +67,18 @@ namespace Pistachio
             if (passesSortedAndFence[gfx].second <= computePassesSortedAndFence[cmp].second)
             {
                 cmdLists[gfxIndex]->End();
-                RendererBase::directQueue->ExecuteCommandLists(&cmdLists[gfxIndex]->ID, 1);
+                RendererBase::GetDirectQueue()->ExecuteCommandLists(&cmdLists[gfxIndex]->ID, 1);
                 uint32_t j = gfxIndex == 0 ? 0 : levelTransitionIndices[gfxIndex - 1].first;
                 PT_CORE_VERBOSE("GFX Group {0}", gfxIndex);
                 if ((levelTransitionIndices[gfxIndex].second & PassAction::Signal) != (PassAction)0)
                 {
-                    RendererBase::directQueue->SignalFence(fence, passesSortedAndFence[j].second + 1 + maxFence);
+                    RendererBase::GetDirectQueue()->SignalFence(fence, passesSortedAndFence[j].second + 1 + maxFence);
                     PT_CORE_VERBOSE("    Signal Fence to {0}", passesSortedAndFence[j].second + 1);
                 }
                 if ((levelTransitionIndices[gfxIndex].second & PassAction::Wait) != (PassAction)0)
                 {
                     uint64_t waitVal = passesSortedAndFence[levelTransitionIndices[gfxIndex].first].second;
-                    RendererBase::directQueue->WaitForFence(fence, waitVal + maxFence);
+                    RendererBase::GetDirectQueue()->WaitForFence(fence, waitVal + maxFence);
                     PT_CORE_VERBOSE("    Wait for fence to reach {0}", waitVal);
                 }
                 gfxIndex++;
@@ -87,17 +87,17 @@ namespace Pistachio
             {
                 uint32_t j = cmpIndex == 0 ? 0 : computeLevelTransitionIndices[cmpIndex - 1].first;
                 computeCmdLists[cmpIndex]->End();
-                RendererBase::computeQueue->ExecuteCommandLists(&computeCmdLists[cmpIndex]->ID, 1);
+                RendererBase::GetComputeQueue()->ExecuteCommandLists(&computeCmdLists[cmpIndex]->ID, 1);
                 PT_CORE_VERBOSE("CMP Group {0}", cmpIndex);
                 if ((computeLevelTransitionIndices[cmpIndex].second & PassAction::Signal) != (PassAction)0)
                 {
-                    RendererBase::computeQueue->SignalFence(fence, computePassesSortedAndFence[j].second + 1 + maxFence);
+                    RendererBase::GetComputeQueue()->SignalFence(fence, computePassesSortedAndFence[j].second + 1 + maxFence);
                     PT_CORE_VERBOSE("    Signal Fence to {0}", computePassesSortedAndFence[j].second + 1);
                 }
                 if ((computeLevelTransitionIndices[cmpIndex].second & PassAction::Wait) != (PassAction)0)
                 {
                     uint64_t waitVal = computePassesSortedAndFence[computeLevelTransitionIndices[cmpIndex].first].second;
-                    RendererBase::computeQueue->WaitForFence(fence, waitVal + maxFence);
+                    RendererBase::GetComputeQueue()->WaitForFence(fence, waitVal + maxFence);
                     PT_CORE_VERBOSE("Wait for fence to reach {0}", waitVal);
                 }
                 cmpIndex++;
@@ -107,19 +107,19 @@ namespace Pistachio
         {
             computeLast = false;
             cmdLists[gfxIndex]->End();
-            RendererBase::directQueue->ExecuteCommandLists(&cmdLists[gfxIndex]->ID, 1);
+            RendererBase::GetDirectQueue()->ExecuteCommandLists(&cmdLists[gfxIndex]->ID, 1);
             uint32_t j = gfxIndex == 0 ? 0 : levelTransitionIndices[gfxIndex - 1].first;
             PT_CORE_VERBOSE("GFX Group ", gfxIndex);
             if ((levelTransitionIndices[gfxIndex].second & PassAction::Signal) != (PassAction)0)
             {
-                RendererBase::directQueue->SignalFence(fence, passesSortedAndFence[j].second + 1 + maxFence);
+                RendererBase::GetDirectQueue()->SignalFence(fence, passesSortedAndFence[j].second + 1 + maxFence);
                 PT_CORE_VERBOSE("Signal Fence to ", passesSortedAndFence[j].second + 1);
             }
             if ((levelTransitionIndices[gfxIndex].second & PassAction::Wait) != (PassAction)0)
             {
                 uint64_t waitVal = passesSortedAndFence[levelTransitionIndices[gfxIndex].first].second;
                 
-                RendererBase::directQueue->WaitForFence(fence, waitVal + maxFence);
+                RendererBase::GetDirectQueue()->WaitForFence(fence, waitVal + maxFence);
                 PT_CORE_VERBOSE("Wait for fence to reach ", waitVal);
             }
             gfxIndex++;
@@ -129,17 +129,17 @@ namespace Pistachio
             uint32_t j = cmpIndex == 0 ? 0 : computeLevelTransitionIndices[cmpIndex - 1].first;
             computeCmdLists[cmpIndex]->End();
             
-            RendererBase::computeQueue->ExecuteCommandLists(&computeCmdLists[cmpIndex]->ID, 1);
+            RendererBase::GetComputeQueue()->ExecuteCommandLists(&computeCmdLists[cmpIndex]->ID, 1);
             PT_CORE_VERBOSE("CMP Group {0}", cmpIndex);
             if ((computeLevelTransitionIndices[cmpIndex].second & PassAction::Signal) != (PassAction)0)
             {
-                RendererBase::computeQueue->SignalFence(fence, computePassesSortedAndFence[j].second + 1 + maxFence);
+                RendererBase::GetComputeQueue()->SignalFence(fence, computePassesSortedAndFence[j].second + 1 + maxFence);
                 PT_CORE_VERBOSE("    Signal Fence to {0}", computePassesSortedAndFence[j].second + 1);
             }
             if ((computeLevelTransitionIndices[cmpIndex].second & PassAction::Wait) != (PassAction)0)
             {
                 uint64_t waitVal = computePassesSortedAndFence[computeLevelTransitionIndices[cmpIndex].first].second;
-                RendererBase::computeQueue->WaitForFence(fence, waitVal + maxFence) ;
+                RendererBase::GetComputeQueue()->WaitForFence(fence, waitVal + maxFence) ;
                 PT_CORE_VERBOSE("    Wait for fence to reach {0}", waitVal);
             }
             cmpIndex++;
@@ -148,20 +148,20 @@ namespace Pistachio
         if (computeLast)
         {
             maxFence += computePassesSortedAndFence[computePassesSortedAndFence.size() - 1].second + 1;
-            RendererBase::computeQueue->SignalFence(fence, maxFence);
+            RendererBase::GetComputeQueue()->SignalFence(fence, maxFence);
         }
         else
         {
             maxFence += passesSortedAndFence[passesSortedAndFence.size() - 1].second + 1;
-            RESULT res = RendererBase::directQueue->SignalFence(fence, maxFence);
+            RESULT res = RendererBase::GetDirectQueue()->SignalFence(fence, maxFence);
         }
-        //auto res = RendererBase::device->QueueWaitIdle(RendererBase::directQueue);
+        //auto res = RendererBase::device->QueueWaitIdle(RendererBase::GetDirectQueue());
         //if (res) {
         //    uint32_t gfxPoint = dbgBufferGFX->GetValue();
         //    uint32_t cmpPoint = dbgBufferCMP->GetValue();
         //    __debugbreak();
         //}
-        //RendererBase::device->QueueWaitIdle(RendererBase::computeQueue);
+        //RendererBase::device->QueueWaitIdle(RendererBase::GetComputeQueue());
         //fence->Wait(maxFence);
 
     }
@@ -170,11 +170,11 @@ namespace Pistachio
         uint32_t numGFXCmdLists = cmdLists.size(), numComputeCmdLists = computeCmdLists.size();
         for (uint32_t i = 0; i < numGFXCmdLists; i++)
         {
-            cmdLists[i]->Begin(RendererBase::commandAllocators[RendererBase::currentFrameIndex]);
+            cmdLists[i]->Begin(RendererBase::Get().commandAllocators[RendererBase::GetCurrentFrameIndex()]);
         }
         for (uint32_t i = 0; i < numComputeCmdLists; i++)
         {
-            computeCmdLists[i]->Begin(RendererBase::computeCommandAllocators[RendererBase::currentFrameIndex]);
+            computeCmdLists[i]->Begin(RendererBase::Get().computeCommandAllocators[RendererBase::GetCurrentFrameIndex()]);
         }
     }
     RGTextureHandle RenderGraph::CreateTexture(RenderTexture* texture)
@@ -387,13 +387,14 @@ namespace Pistachio
         uint32_t gfxIndex = 0;
         uint32_t cmpIndex = 0;
         RHI::PipelineStage* gfxStage = 0, * cmpStage = 0;
-        if (!RendererBase::MQ) { gfxStage = &GFXstage; cmpStage = &GFXstage; }
+        const bool MQ = RendererBase::GetComputeQueue().IsValid();
+        if (!MQ) { gfxStage = &GFXstage; cmpStage = &GFXstage; }
         else {gfxStage = &GFXstage; cmpStage = &CMPstage; }
         //we execute in order of fence vals with the gurantee that if passes overlap they do not share dependencies
         //this shouldnt be necessary as fence vals should alternate, but well do it anyway
         
         auto gfxQueue = RHI::QueueFamily::Graphics;
-        auto cmpQueue = RendererBase::MQ ? RHI::QueueFamily::Compute : RHI::QueueFamily::Graphics;
+        auto cmpQueue = MQ ? RHI::QueueFamily::Compute : RHI::QueueFamily::Graphics;
         while (gfxIndex < levelTransitionIndices.size() && cmpIndex < computeLevelTransitionIndices.size())
         {
             uint32_t gfx = gfxIndex == 0 ? 0 : levelTransitionIndices[gfxIndex - 1].first;
@@ -401,7 +402,7 @@ namespace Pistachio
             RHI::Weak<RHI::GraphicsCommandList> cmpList;
             RHI::Weak<RHI::GraphicsCommandList> gfxList;
             
-            if (RendererBase::MQ)
+            if (MQ)
             {
                 cmpList = cmpIndex ? computeCmdLists[cmpIndex - 1] : computeCmdLists[0];
                 gfxList = gfxIndex ? cmdLists[gfxIndex - 1] : cmdLists[0];
@@ -418,7 +419,7 @@ namespace Pistachio
         }
         RHI::Weak<RHI::GraphicsCommandList> cmpList;
         RHI::Weak<RHI::GraphicsCommandList> gfxList;
-        if (RendererBase::MQ)
+        if (MQ)
         {
             cmpList = computeLevelTransitionIndices.size() && cmpIndex ? computeCmdLists[cmpIndex - 1] : nullptr;
             gfxList = levelTransitionIndices.size() && gfxIndex ? cmdLists[gfxIndex - 1] : nullptr;
@@ -712,14 +713,14 @@ namespace Pistachio
     inline void RenderGraph::ExecuteGFXLevel(uint32_t levelInd, RHI::PipelineStage& stage, RHI::Weak<RHI::GraphicsCommandList> prevList,
     RHI::QueueFamily srcQueue)
     {
-        RHI::Weak<RHI::GraphicsCommandList> currentList = cmdLists[RendererBase::MQ ? levelInd : 0];
+        RHI::Weak<RHI::GraphicsCommandList> currentList = cmdLists[RendererBase::GetComputeQueue().IsValid() ? levelInd : 0];
         ExecLevel<RenderPass>(levelTransitionIndices, levelInd, currentList, prevList, passesSortedAndFence, textures, buffers, srcQueue, stage);
     }
 
     inline void RenderGraph::ExecuteCMPLevel(uint32_t levelInd, RHI::PipelineStage& stage, RHI::Weak<RHI::GraphicsCommandList> prevList,
     RHI::QueueFamily srcQueue)
     {
-        RHI::Weak<RHI::GraphicsCommandList> currentList =RendererBase::MQ ? computeCmdLists[levelInd] : cmdLists[0];
+        RHI::Weak<RHI::GraphicsCommandList> currentList =RendererBase::GetComputeQueue().IsValid() ? computeCmdLists[levelInd] : cmdLists[0];
         ExecLevel<ComputePass>(computeLevelTransitionIndices, levelInd, currentList, prevList, computePassesSortedAndFence, textures, buffers, srcQueue, stage);
     }
 
@@ -972,21 +973,22 @@ namespace Pistachio
         cmdLists.clear();
         computeCmdLists.clear();
         size_t numGFXCmdLists = levelTransitionIndices.size();
-        size_t numComputeCmdLists = RendererBase::MQ ? computeLevelTransitionIndices.size() : 0;
-        if (!RendererBase::MQ) numGFXCmdLists = (levelTransitionIndices.size() + computeLevelTransitionIndices.size()) ? 1 : 0;
+        const bool MQ = RendererBase::GetComputeQueue().IsValid();
+        size_t numComputeCmdLists = MQ ? computeLevelTransitionIndices.size() : 0;
+        if (!MQ) numGFXCmdLists = (levelTransitionIndices.size() + computeLevelTransitionIndices.size()) ? 1 : 0;
         cmdLists.resize(numGFXCmdLists);
         computeCmdLists.resize(numComputeCmdLists);
         for (uint32_t i = 0; i < numGFXCmdLists; i++)
         {
-            cmdLists[i] = RendererBase::device->CreateCommandList(RHI::CommandListType::Direct,
-                RendererBase::commandAllocators[RendererBase::currentFrameIndex]).value();
+            cmdLists[i] = RendererBase::GetDevice()->CreateCommandList(RHI::CommandListType::Direct,
+                RendererBase::Get().commandAllocators[RendererBase::GetCurrentFrameIndex()]).value();
             std::string name = "Render Graph Direct List" + std::to_string(i);
             cmdLists[i]->SetName(name.c_str());
         }
         for (uint32_t i = 0; i < numComputeCmdLists; i++)
         {
-            computeCmdLists[i] = RendererBase::device->CreateCommandList(RHI::CommandListType::Compute,
-                RendererBase::computeCommandAllocators[RendererBase::currentFrameIndex]).value();
+            computeCmdLists[i] = RendererBase::GetDevice()->CreateCommandList(RHI::CommandListType::Compute,
+                RendererBase::Get().computeCommandAllocators[RendererBase::GetCurrentFrameIndex()]).value();
             std::string name = "Render Graph Compute List" + std::to_string(i);
             cmdLists[i]->SetName(name.c_str());
         }

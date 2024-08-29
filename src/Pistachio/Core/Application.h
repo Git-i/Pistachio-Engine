@@ -8,6 +8,7 @@
 
 #include "Pistachio/Renderer/Renderer.h"
 #include "Pistachio/Renderer/Buffer.h"
+#include "Pistachio/Renderer/RendererBase.h"
 #include "Pistachio/Renderer/Shader.h"
 #include "Pistachio/Renderer/Camera.h"
 #include "Pistachio/Core/Input.h"
@@ -51,6 +52,8 @@ namespace Pistachio {
 		void PushOverlay(Layer* overlay);
 		bool OnWindowResize(WindowResizeEvent& e);
 		void SetInputHandler(std::unique_ptr<InputHandler> handler);
+		inline RendererBase& GetRendererBase() {return *m_rendererBase;}
+		inline Renderer& GetRenderer() {return *m_renderer;}
 		inline InputHandler& GetInputHandler() {return *handler;}
 		static Application& Get();
 		static bool Exists();
@@ -66,6 +69,8 @@ namespace Pistachio {
 		bool m_headless = false;
 		LayerStack m_layerstack;
 		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<RendererBase> m_rendererBase;
+		std::unique_ptr<Renderer> m_renderer;
 		bool m_Running = true;
 		bool m_minimized = false;
 		static Application* s_Instance;

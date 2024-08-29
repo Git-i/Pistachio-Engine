@@ -14,18 +14,16 @@
 #include "Pistachio/Core/Window.h"
 #include "Pistachio/Core/Math.h"
 #include <functional>
-static const uint32_t VB_INITIAL_SIZE = 1024;
-static const uint32_t IB_INITIAL_SIZE = 1024;
-static const uint32_t INITIAL_NUM_LIGHTS = 20;
-static const uint32_t INITIAL_NUM_OBJECTS = 20;
-
-static const uint32_t NUM_SKYBOX_MIPS = 5;
+#include "Pistachio/Core/Application.h"
 
 namespace Pistachio {
-	RendererContext Renderer::ctx;
-	void Renderer::Init(const char* skyboxFile)
+	inline static Renderer& Self()
 	{
-		ctx.Initailize();
+		return Application::Get().GetRenderer();
+	}
+	void Renderer::Init()
+	{
+		Self().ctx.Initailize();
 	}
 	void Renderer::ChangeRGTexture(RGTextureHandle& texture, RHI::ResourceLayout newLayout, RHI::ResourceAcessFlags newAccess,RHI::QueueFamily newFamily)
 	{
@@ -45,22 +43,22 @@ namespace Pistachio {
 	}
 	const RendererVBHandle Renderer::AllocateVertexBuffer(uint32_t size,const void* initialData)
 	{
-		return ctx.meshVertices.allocator.Allocate(std::bind(Renderer::GrowMeshBuffer, std::placeholders::_1, 
+		return Self().ctx.meshVertices.allocator.Allocate(std::bind(Renderer::GrowMeshBuffer, std::placeholders::_1, 
 			RHI::BufferUsage::VertexBuffer|RHI::BufferUsage::CopySrc|RHI::BufferUsage::CopyDst,
-			std::ref(ctx.meshVertices)),
-			std::bind(Renderer::DefragmentMeshBuffer, std::ref(ctx.meshIndices)),size,&ctx.meshVertices, initialData);
+			std::ref(Self().ctx.meshVertices)),
+			std::bind(Renderer::DefragmentMeshBuffer, std::ref(Self().ctx.meshIndices)),size,&Self().ctx.meshVertices, initialData);
 	}
 	const RendererIBHandle Renderer::AllocateIndexBuffer(uint32_t size, const void* initialData)
 	{
-		auto [a,b] = ctx.meshIndices.allocator.Allocate(std::bind(Renderer::GrowMeshBuffer, std::placeholders::_1, 
+		auto [a,b] = Self().ctx.meshIndices.allocator.Allocate(std::bind(Renderer::GrowMeshBuffer, std::placeholders::_1, 
 			RHI::BufferUsage::IndexBuffer|RHI::BufferUsage::CopySrc|RHI::BufferUsage::CopyDst,
-			std::ref(ctx.meshIndices)), 
-			std::bind(Renderer::DefragmentMeshBuffer, std::ref(ctx.meshIndices)), size,&ctx.meshIndices, initialData);
+			std::ref(Self().ctx.meshIndices)), 
+			std::bind(Renderer::DefragmentMeshBuffer, std::ref(Self().ctx.meshIndices)), size,&Self().ctx.meshIndices, initialData);
 		return { a,b };
 	}
 	ComputeShader* Renderer::GetBuiltinComputeShader(const std::string& name)
 	{
-		if (auto it = ctx.computeShaders.find(name); it != ctx.computeShaders.end())
+		if (auto it = Self().ctx.computeShaders.find(name); it != Self().ctx.computeShaders.end())
 		{
 			return it->second;
 		}
@@ -68,7 +66,7 @@ namespace Pistachio {
 	}
 	Shader* Renderer::GetBuiltinShader(const std::string& name)
 	{
-		if (auto it = ctx.shaders.find(name); it != ctx.shaders.end())
+		if (auto it = Self().ctx.shaders.find(name); it != Self().ctx.shaders.end())
 		{
 			return it->second;
 		}
@@ -77,7 +75,7 @@ namespace Pistachio {
 	const RendererCBHandle Renderer::AllocateConstantBuffer(uint32_t size)
 	{
 		
-		auto [a,b] = ctx.constantBufferAllocator.Allocate(&Renderer::GrowConstantBuffer, &Renderer::DefragmentConstantBuffer,
+		auto [a,b] = Self().ctx.constantBufferAllocator.Allocate(&Renderer::GrowConstantBuffer, &Renderer::DefragmentConstantBuffer,
 			RendererUtils::ConstantBufferElementSize(size));
 		return { a,size, b };
 	}
@@ -93,7 +91,7 @@ namespace Pistachio {
 		desc.usage = usage;
 		RHI::AutomaticAllocationInfo allocInfo;
 		allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-		RHI::Ptr<RHI::Buffer> newBuffer = RendererBase::device->CreateBuffer(desc, 0, 0, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+		RHI::Ptr<RHI::Buffer> newBuffer = RendererBase::GetDevice()->CreateBuffer(desc, 0, 0, &allocInfo, 0, RHI::ResourceType::Automatic).value();
 		RHI::BufferMemoryBarrier barr;
 		barr.AccessFlagsBefore = RHI::ResourceAcessFlags::TRANSFER_WRITE;
 		barr.AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_READ;
@@ -101,16 +99,16 @@ namespace Pistachio {
 		barr.nextQueue = barr.previousQueue = RHI::QueueFamily::Ignored;
 		barr.size = capacity;
 		barr.offset = 0;
-		RendererBase::stagingCommandList->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::TRANSFER_BIT, {&barr,1},{});
+		RendererBase::Get().stagingCommandList->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::TRANSFER_BIT, {&barr,1},{});
 		//Queue it with staging stuff
-		RendererBase::stagingCommandList->CopyBufferRegion(0, 0, capacity, buffer.buffer, newBuffer);
+		RendererBase::Get().stagingCommandList->CopyBufferRegion(0, 0, capacity, buffer.buffer, newBuffer);
 		barr.AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_WRITE;
 		barr.buffer = newBuffer;
-		RendererBase::stagingCommandList->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::TRANSFER_BIT, {&barr,1},{});
+		RendererBase::Get().stagingCommandList->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::TRANSFER_BIT, {&barr,1},{});
 		//wait until copy is finished?
 		RendererBase::FlushStagingBuffer();
 		//before destroying old buffer, wait for old frames to render
-		RendererBase::mainFence->Wait(RendererBase::currentFenceVal);
+		RendererBase::Get().mainFence->Wait(RendererBase::Get().currentFenceVal);
 		buffer.buffer = newBuffer;
 		buffer.allocator.freeSpace += minExtraSize + GROW_FACTOR;
 		buffer.allocator.freeFastSpace += minExtraSize + GROW_FACTOR;
@@ -119,58 +117,61 @@ namespace Pistachio {
 	}
 	void Pistachio::Renderer::GrowConstantBuffer(uint32_t minExtraSize)
 	{
-		uint32_t capacity = ctx.constantBufferAllocator.capacity;
+
+		uint32_t capacity = Self().ctx.constantBufferAllocator.capacity;
 		const uint32_t GROW_FACTOR = 20; //probably use a better, more size dependent method to determing this
 		uint32_t new_size = capacity + minExtraSize + GROW_FACTOR;
 		RHI::BufferDesc desc;
 		desc.size = new_size;
 		desc.usage = RHI::BufferUsage::ConstantBuffer;
-		RendererBase::mainFence->Wait(RendererBase::currentFenceVal);
+		RendererBase::Get().mainFence->Wait(RendererBase::Get().currentFenceVal);
 		for (uint32_t i = 0; i < 3; i++)
 		{
 			
 			RHI::AutomaticAllocationInfo allocInfo;
 			allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::Sequential;
-			RHI::Ptr<RHI::Buffer> newCB = RendererBase::device->CreateBuffer(desc, 0, 0, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+			RHI::Ptr<RHI::Buffer> newCB = RendererBase::GetDevice()->CreateBuffer(desc, 0, 0, &allocInfo, 0, RHI::ResourceType::Automatic).value();
 			void* writePtr;
 			void* readPtr;
 			newCB->Map(&writePtr);
-			ctx.resources[i].transformBuffer.ID->Map(&readPtr);
+			Self().ctx.resources[i].transformBuffer.ID->Map(&readPtr);
 			memcpy(writePtr, readPtr, capacity);
-			ctx.resources[i].transformBuffer.ID->UnMap();
+			Self().ctx.resources[i].transformBuffer.ID->UnMap();
 			newCB->UnMap();
-			ctx.resources[i].transformBuffer.ID = newCB;
+			Self().ctx.resources[i].transformBuffer.ID = newCB;
 		}
-		ctx.constantBufferAllocator.freeSpace += minExtraSize + GROW_FACTOR;
-		ctx.constantBufferAllocator.freeFastSpace += minExtraSize + GROW_FACTOR;
-		ctx.constantBufferAllocator.capacity = new_size;
-		ctx.constantBufferAllocator.freeList.Grow(new_size);
+		Self().ctx.constantBufferAllocator.freeSpace += minExtraSize + GROW_FACTOR;
+		Self().ctx.constantBufferAllocator.freeFastSpace += minExtraSize + GROW_FACTOR;
+		Self().ctx.constantBufferAllocator.capacity = new_size;
+		Self().ctx.constantBufferAllocator.freeList.Grow(new_size);
 	}
 	void Pistachio::Renderer::FreeVertexBuffer(const RendererVBHandle handle)
 	{
-		ctx.meshVertices.allocator.DeAllocate(handle);
+		Self().ctx.meshVertices.allocator.DeAllocate(handle);
 	}
 	void Renderer::FreeIndexBuffer(const RendererIBHandle handle)
 	{
-		ctx.meshIndices.allocator.DeAllocate({handle.handle, handle.size});
+		Self().ctx.meshIndices.allocator.DeAllocate({handle.handle, handle.size});
 	}
 	RHI::Ptr<RHI::Buffer> Renderer::GetVertexBuffer()
 	{
-		return ctx.meshVertices.buffer;
+		return Self().ctx.meshVertices.buffer;
 	}
 	RHI::Ptr<RHI::Buffer> Renderer::GetIndexBuffer()
 	{
-		return ctx.meshIndices.buffer;
+		return Self().ctx.meshIndices.buffer;
 	}
 	void Renderer::DefragmentMeshBuffer(MonolithicBuffer& buffer)
 	{
+
+
 		auto block = buffer.allocator.freeList.GetBlockPtr();
 		uint32_t nextFreeOffset = 0;
 		while (block)
 		{
 			if (block->offset > nextFreeOffset)
 			{
-				RendererBase::stagingCommandList->CopyBufferRegion(block->offset, nextFreeOffset, block->size, buffer.buffer, buffer.buffer);
+				RendererBase::Get().stagingCommandList->CopyBufferRegion(block->offset, nextFreeOffset, block->size, buffer.buffer, buffer.buffer);
 				nextFreeOffset += block->size;
 			}
 			block = block->next;
@@ -188,13 +189,14 @@ namespace Pistachio {
 	}
 	void Renderer::DefragmentConstantBuffer()
 	{
-		RendererBase::mainFence->Wait(RendererBase::currentFenceVal);
-		auto block = ctx.constantBufferAllocator.freeList.GetBlockPtr();
+
+		RendererBase::Get().mainFence->Wait(RendererBase::Get().currentFenceVal);
+		auto block = Self().ctx.constantBufferAllocator.freeList.GetBlockPtr();
 		uint32_t nextFreeOffset = 0;
 		void *ptr1, *ptr2, *ptr3;
-		ctx.resources[0].transformBuffer.ID->Map(&ptr1);
-		ctx.resources[1].transformBuffer.ID->Map(&ptr2);
-		ctx.resources[2].transformBuffer.ID->Map(&ptr3);
+		Self().ctx.resources[0].transformBuffer.ID->Map(&ptr1);
+		Self().ctx.resources[1].transformBuffer.ID->Map(&ptr2);
+		Self().ctx.resources[2].transformBuffer.ID->Map(&ptr3);
 		while (block)
 		{
 			//if block has gap from last block
@@ -208,42 +210,42 @@ namespace Pistachio {
 			}
 			block = block->next;
 		}
-		ctx.resources[0].transformBuffer.ID->UnMap();
-		ctx.resources[1].transformBuffer.ID->UnMap();
-		ctx.resources[2].transformBuffer.ID->UnMap();
+		Self().ctx.resources[0].transformBuffer.ID->UnMap();
+		Self().ctx.resources[1].transformBuffer.ID->UnMap();
+		Self().ctx.resources[2].transformBuffer.ID->UnMap();
 	}
 	const uint32_t Pistachio::Renderer::GetIBOffset(const RendererIBHandle handle)
 	{
-		return ctx.meshIndices.allocator.HandleOffsets[handle.handle];
+		return Self().ctx.meshIndices.allocator.HandleOffsets[handle.handle];
 	}
 	const uint32_t Pistachio::Renderer::GetVBOffset(const RendererVBHandle handle)
 	{
-		return ctx.meshVertices.allocator.HandleOffsets[handle.handle];
+		return Self().ctx.meshVertices.allocator.HandleOffsets[handle.handle];
 	}
 	const uint32_t Pistachio::Renderer::GetCBOffset(const RendererCBHandle handle)
 	{
-		return ctx.constantBufferAllocator.HandleOffsets[handle.handle];
+		return Self().ctx.constantBufferAllocator.HandleOffsets[handle.handle];
 	}
 	void Pistachio::Renderer::PartialCBUpdate(RendererCBHandle handle, void* data, uint32_t offset, uint32_t size)
 	{
 		PT_CORE_ASSERT(offset+size <= handle.size);
-		ctx.resources[RendererBase::currentFrameIndex].transformBuffer.Update(data, size, GetCBOffset(handle) + offset);
+		Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBuffer.Update(data, size, GetCBOffset(handle) + offset);
 	}
 	void Pistachio::Renderer::FullCBUpdate(RendererCBHandle handle, void* data)
 	{
-		ctx.resources[RendererBase::currentFrameIndex].transformBuffer.Update(data, handle.actual_size, GetCBOffset(handle));
+		Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBuffer.Update(data, handle.actual_size, GetCBOffset(handle));
 	}
 	RHI::Ptr<RHI::Buffer> Pistachio::Renderer::GetConstantBuffer()
 	{
-		return ctx.resources[RendererBase::currentFrameIndex].transformBuffer.ID;
+		return Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBuffer.ID;
 	}
 	const RHI::Ptr<RHI::DynamicDescriptor> Pistachio::Renderer::GetCBDesc()
 	{
-		return ctx.resources[RendererBase::currentFrameIndex].transformBufferDesc;
+		return Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBufferDesc;
 	}
 	const RHI::Ptr<RHI::DynamicDescriptor> Renderer::GetCBDescPS()
 	{
-		return ctx.resources[RendererBase::currentFrameIndex].transformBufferDescPS;
+		return Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBufferDescPS;
 	}
 	void Pistachio::Renderer::Submit(RHI::Weak<RHI::GraphicsCommandList> list,const RendererVBHandle vb, const RendererIBHandle ib, uint32_t vertexStride)
 	{
@@ -254,6 +256,14 @@ namespace Pistachio {
 	}
 	SamplerHandle Pistachio::Renderer::GetDefaultSampler()
 	{
-		return ctx.defaultSampler;
+		return Self().ctx.defaultSampler;
+	}
+	SamplerHandle Renderer::GetShadowSampler()
+	{
+		return Self().ctx.shadowSampler;
+	}
+	Texture2D& Renderer::GetBrdfTexture()
+	{
+		return Self().ctx.BrdfTex;
 	}
 }

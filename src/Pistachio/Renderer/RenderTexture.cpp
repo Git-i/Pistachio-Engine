@@ -30,7 +30,7 @@ namespace Pistachio
         desc.usage = RHI::TextureUsage::ColorAttachment | RHI::TextureUsage::SampledImage | RHI::TextureUsage::CopySrc;
         RHI::AutomaticAllocationInfo allocInfo;
         allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        m_ID = RendererBase::device->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+        m_ID = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
         PT_DEBUG_REGION(m_ID->SetName(name));
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
@@ -44,7 +44,7 @@ namespace Pistachio
         viewDesc.range = range;
         viewDesc.texture = m_ID;
         viewDesc.type = RHI::TextureViewType::Texture2D;
-        m_view = RendererBase::device->CreateTextureView(viewDesc).value();
+        m_view = RendererBase::GetDevice()->CreateTextureView(viewDesc).value();
         
         RHI::RenderTargetViewDesc rtDesc;
         rtDesc.arraySlice = 0;
@@ -81,7 +81,7 @@ namespace Pistachio
         desc.usage = RHI::TextureUsage::ColorAttachment | RHI::TextureUsage::SampledImage | RHI::TextureUsage::CubeMap | extraUsage;
         RHI::AutomaticAllocationInfo allocInfo;
         allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        m_ID = RendererBase::device->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+        m_ID = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
         PT_DEBUG_REGION(m_ID->SetName(name));
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
@@ -95,7 +95,7 @@ namespace Pistachio
         viewDesc.range = range;
         viewDesc.texture = m_ID;
         viewDesc.type = RHI::TextureViewType::TextureCube;
-        m_view = RendererBase::device->CreateTextureView(viewDesc).value();
+        m_view = RendererBase::GetDevice()->CreateTextureView(viewDesc).value();
 
         for (uint32_t i = 0; i < 6; i++)
         {
@@ -129,7 +129,7 @@ namespace Pistachio
         if(list)
         list->PipelineBarrier(RHI::PipelineStage::TOP_OF_PIPE_BIT, RHI::PipelineStage::ALL_GRAPHICS_BIT, {}, {&barrier,1});
         else
-            RendererBase::mainCommandList->PipelineBarrier(RHI::PipelineStage::TOP_OF_PIPE_BIT, RHI::PipelineStage::ALL_GRAPHICS_BIT, {}, {&barrier,1});
+            RendererBase::GetMainCommandList()->PipelineBarrier(RHI::PipelineStage::TOP_OF_PIPE_BIT, RHI::PipelineStage::ALL_GRAPHICS_BIT, {}, {&barrier,1});
     }
     DepthTexture* DepthTexture::Create(uint32_t width, uint32_t height, uint32_t mipLevels, RHI::Format format PT_DEBUG_REGION(,const char* name))
     {
@@ -156,7 +156,7 @@ namespace Pistachio
         desc.usage = RHI::TextureUsage::DepthStencilAttachment | RHI::TextureUsage::SampledImage;
         RHI::AutomaticAllocationInfo allocInfo;
         allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        m_ID = RendererBase::device->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+        m_ID = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
         PT_DEBUG_REGION(m_ID->SetName(name));
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
@@ -170,7 +170,7 @@ namespace Pistachio
         viewDesc.range = range;
         viewDesc.texture = m_ID;
         viewDesc.type = RHI::TextureViewType::Texture2D;
-        m_view = RendererBase::device->CreateTextureView(viewDesc).value();
+        m_view = RendererBase::GetDevice()->CreateTextureView(viewDesc).value();
 
         RHI::DepthStencilViewDesc dsDesc;
         dsDesc.arraySlice = 0;
