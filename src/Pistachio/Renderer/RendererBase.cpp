@@ -30,6 +30,18 @@ namespace Pistachio {
 	{
 		auto& base = Application::Get().GetRendererBase();
 		PT_PROFILE_FUNCTION();
+		if(auto wnd = Application::Get().GetWindow())
+		{
+			wnd->GetSwapChain().BackBufferBarrier(
+				RHI::PipelineStage::TRANSFER_BIT,
+				RHI::PipelineStage::BOTTOM_OF_PIPE_BIT, 
+
+				RHI::ResourceLayout::TRANSFER_DST_OPTIMAL,
+				RHI::ResourceLayout::PRESENT, 
+
+				RHI::ResourceAcessFlags::TRANSFER_WRITE, 
+				RHI::ResourceAcessFlags::NONE);
+		}
 		base.mainCommandList->End();
 		base.directQueue->ExecuteCommandLists(&base.mainCommandList->ID, 1);
 		base.fence_vals[base.currentFrameIndex] = ++base.currentFenceVal;

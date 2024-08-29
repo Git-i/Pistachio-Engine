@@ -4,9 +4,9 @@
 #include "Surface.h"
 #include "SwapChain.h"
 #include "Texture.h"
-#include "ptpch.h"
 #include "Pistachio/Core.h"
 #include "Pistachio/Event/Event.h"
+#include <cstdint>
 
 void SetWindowDataPtr(void* value);
 PISTACHIO_API void* GetWindowDataPtr();
@@ -52,9 +52,10 @@ using EventCallbackFn = std::function<void(Pistachio::Event& e)>;
 			RHI::Ptr<RHI::SwapChain> swapchain;
 			void Update();
 			void Initialize(uint32_t width, uint32_t height);
+			void Resize(uint32_t width, uint32_t height);
 			std::vector<RHI::Ptr<RHI::Texture>> swapTextures;
 		private:
-			RHI::Ptr<RHI::DescriptorHeap> mainRTVheap;
+			friend class RendererBase;
 			void BackBufferBarrier(RHI::PipelineStage,RHI::PipelineStage,
 				RHI::ResourceLayout,RHI::ResourceLayout,
 				RHI::ResourceAcessFlags,RHI::ResourceAcessFlags);

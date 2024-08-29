@@ -1,5 +1,6 @@
 #include "Core.h"
 #include "GLFW/glfw3.h"
+#include "Pistachio/Core.h"
 #include "Pistachio/Core/Application.h"
 #include "LinuxWindow.h"
 #include "Pistachio/Core/Log.h"
@@ -43,6 +44,11 @@ void window_close(GLFWwindow* window)
 {
 	Pistachio::Application::Get().Stop();
 }
+void window_resize(GLFWwindow* window, int w, int h)
+{
+	PT_CORE_TRACE("Window Resize");
+	PT_DEBUG_BREAK;
+}
 
 
 namespace Pistachio {
@@ -82,7 +88,7 @@ namespace Pistachio {
         glfwSetCursorPosCallback(pd.window, cursor_position_callback);
         glfwSetScrollCallback(pd.window, scroll_callback);
 		glfwSetWindowCloseCallback(pd.window, window_close);
-
+		glfwSetWindowSizeCallback(pd.window, window_resize);
 		m_swapChain.surface.InitGLFW(pd.window, RendererBase::GetInstance()->ID);
 		m_swapChain.Initialize(info.width, info.height);
         return 0;

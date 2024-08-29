@@ -57,10 +57,6 @@ namespace Pistachio {
 #endif
 		InitTime = std::chrono::high_resolution_clock::now();
 		lastFrameTime = std::chrono::milliseconds(0);
-		//QueryPerformanceFrequency(&frequency);
-		//period = 1 / (float)frequency.QuadPart;
-		//QueryPerformanceCounter(&ticks);
-		//InitTime = (ticks.QuadPart * period);
 	}
 
 	

@@ -1,8 +1,12 @@
+#include "SwapChain.h"
 #include "DescriptorHeap.h"
+#include "Device.h"
 #include "FormatsAndTypes.h"
+#include "Pistachio/Core/Log.h"
 #include "Pistachio/Utils/RendererUtils.h"
 #include "Pistachio/Renderer/RendererBase.h"
 #include "Application.h"
+#include "Surface.h"
 #include "Window.h"
 #include <cstdint>
 
@@ -29,19 +33,25 @@ namespace Pistachio
 		barr.previousQueue = barr.nextQueue = RHI::QueueFamily::Ignored;
 		base.mainCommandList->PipelineBarrier(before, after, {},{&barr,1});
 	}
-    void SwapChain::Initialize(uint32_t width, uint32_t height)
-    {
-        RHI::SwapChainDesc sDesc;
-		sDesc.BufferCount = RendererUtils::SwapImageCount(RendererBase::GetInstance()->GetSwapChainMinMaxImageCount(RendererBase::GetPhysicalDevice(), &surface), 2);
+	static RHI::SwapChainDesc MakeDesc(RHI::Surface& srf, uint32_t width, uint32_t height)
+	{
+		static uint32_t size  = RendererUtils::SwapImageCount(RendererBase::GetInstance()->GetSwapChainMinMaxImageCount(RendererBase::GetPhysicalDevice(), &srf), 2);
+		RHI::SwapChainDesc sDesc;
+		sDesc.BufferCount = size;
 		sDesc.Flags = 0;
 		sDesc.Height = height;
 		sDesc.Width = width;
-		sDesc.OutputSurface = surface;
+		sDesc.OutputSurface = srf;
 		sDesc.RefreshRate = { 60,1 };
 		sDesc.SampleCount = 1; //disable multisampling for now, because RHI doesnt fully support it
 		sDesc.SampleQuality = 0;
 		sDesc.SwapChainFormat = RHI::Format::B8G8R8A8_UNORM;//todo add functionality to get supported formats in the RHI
 		sDesc.Windowed = true;
+		return sDesc;
+	}
+    void SwapChain::Initialize(uint32_t width, uint32_t height)
+    {
+        auto sDesc = MakeDesc(surface, width, height);
 		swapchain = RendererBase::GetInstance()->CreateSwapChain(sDesc, RendererBase::GetPhysicalDevice(), RendererBase::GetDevice(), RendererBase::GetDirectQueue()).value();
         swapTextures.resize(sDesc.BufferCount);
         uint32_t index = 0;
@@ -52,26 +62,7 @@ namespace Pistachio
 			name[18] += index;
 			texture->SetName(name);
         }
-        auto& base = Application::Get().GetRendererBase();
-        //create render target views
-        RHI::PoolSize ps;
-        ps.numDescriptors = sDesc.BufferCount;
-        ps.type  = RHI::DescriptorType::RTV;
-        RHI::DescriptorHeapDesc rtvHeapDesc;
-        rtvHeapDesc.maxDescriptorSets = 1;
-        rtvHeapDesc.numPoolSizes = 1;
-        rtvHeapDesc.poolSizes = &ps;
-		mainRTVheap = RendererBase::GetDevice()->CreateDescriptorHeap(rtvHeapDesc).value();
-		PT_CORE_INFO("Created RTV descriptor heaps");
-		for (int i = 0; i < sDesc.BufferCount; i++)
-		{
-			RHI::CPU_HANDLE handle;
-			handle.val = mainRTVheap->GetCpuHandle().val + (i * base.device->GetDescriptorHeapIncrementSize(RHI::DescriptorType::RTV));
-			RHI::RenderTargetViewDesc rtvDesc;
-			rtvDesc.arraySlice = rtvDesc.TextureArray = rtvDesc.textureMipSlice = 0;
-			rtvDesc.format = RHI::Format::B8G8R8A8_UNORM;
-			base.device->CreateRenderTargetView(swapTextures[i], rtvDesc, handle);
-		}
+		
 		BackBufferBarrier(
 				RHI::PipelineStage::TOP_OF_PIPE_BIT,
 				RHI::PipelineStage::TRANSFER_BIT, 
@@ -86,16 +77,14 @@ namespace Pistachio
     void SwapChain::Update()
     {
         auto& base = Application::Get().GetRendererBase();
-        BackBufferBarrier(
-				RHI::PipelineStage::TRANSFER_BIT,
-				RHI::PipelineStage::BOTTOM_OF_PIPE_BIT, 
-
-				RHI::ResourceLayout::TRANSFER_DST_OPTIMAL,
-				RHI::ResourceLayout::PRESENT, 
-
-				RHI::ResourceAcessFlags::TRANSFER_WRITE, 
-				RHI::ResourceAcessFlags::NONE);
-        swapchain->Present(base.mainFence, base.fence_vals[(base.currentFrameIndex+2)%3]);
+        
+        auto res = swapchain->Present(base.mainFence, base.fence_vals[(base.currentFrameIndex+2)%3]);
+		if(res == RHI::SwapChainError::OutOfDate)
+		{
+			PT_CORE_WARN("SwapChain Out of Date");
+			auto wnd = Application::Get().GetWindow();
+			Resize(wnd->GetWidth(), wnd->GetHeight());
+		}
         BackBufferBarrier(
 				RHI::PipelineStage::TOP_OF_PIPE_BIT,
 				RHI::PipelineStage::TRANSFER_BIT, 
@@ -106,4 +95,29 @@ namespace Pistachio
 				RHI::ResourceAcessFlags::NONE, 
 				RHI::ResourceAcessFlags::TRANSFER_WRITE);
     }
+	void SwapChain::Resize(uint32_t width, uint32_t height)
+	{
+		RendererBase::Get().mainFence->Wait(RendererBase::Get().fence_vals[(RendererBase::GetCurrentFrameIndex() + 2) % 3]);
+		auto sDesc = MakeDesc(surface, width, height);
+		swapchain->Release();
+		swapchain = nullptr;
+		swapchain = RendererBase::GetInstance()->CreateSwapChain(sDesc, RendererBase::GetPhysicalDevice(), RendererBase::GetDevice(), RendererBase::GetDirectQueue()).value();
+		uint32_t index = 0;
+        for(auto& texture : swapTextures)
+        {
+            texture = RendererBase::GetDevice()->GetSwapChainImage(swapchain, index++).value();
+            char name[20] = {"Back Buffer Image 0"};
+			name[18] += index;
+			texture->SetName(name);
+        }
+		BackBufferBarrier(
+				RHI::PipelineStage::TOP_OF_PIPE_BIT,
+				RHI::PipelineStage::TRANSFER_BIT, 
+
+				RHI::ResourceLayout::UNDEFINED,
+				RHI::ResourceLayout::TRANSFER_DST_OPTIMAL, 
+
+				RHI::ResourceAcessFlags::NONE, 
+				RHI::ResourceAcessFlags::TRANSFER_WRITE);
+	}
 }

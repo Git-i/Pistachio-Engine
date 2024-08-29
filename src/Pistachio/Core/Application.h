@@ -57,7 +57,7 @@ namespace Pistachio {
 		inline InputHandler& GetInputHandler() {return *handler;}
 		static Application& Get();
 		static bool Exists();
-		inline Window& GetWindow() { return *m_Window; }
+		inline Window* GetWindow() { return m_Window.get(); }
 		void SetImGuiContext(void* ctx);
 		void Stop() {m_Running = false;}
 		bool IsHeadless() {

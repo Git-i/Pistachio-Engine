@@ -28,7 +28,7 @@ namespace Pistachio {
 		m_ViewProjMatrix = DirectX::XMMatrixTranspose(m_ViewMatrix * m_projectionMatrix);
 	}
 	PerspectiveCamera::PerspectiveCamera(float fov, float nearPlane, float farPLane)
-		:m_projectionMatrix(DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fov), (float)(Application::Get().GetWindow().GetWidth()) / (float)(Application::Get().GetWindow().GetHeight()), nearPlane, farPLane)), m_ViewMatrix(DirectX::XMMatrixIdentity()), fov(DirectX::XMConvertToRadians(fov))
+		:m_projectionMatrix(DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(fov), (float)(Application::Get().GetWindow()->GetWidth()) / (float)(Application::Get().GetWindow()->GetHeight()), nearPlane, farPLane)), m_ViewMatrix(DirectX::XMMatrixIdentity()), fov(DirectX::XMConvertToRadians(fov))
 	{
 		m_eye = Vector3{ 0.0f, 0.0f, -5.0f };
 		m_direction = Vector3{ 0.0f, 0.0f, 0.0f };

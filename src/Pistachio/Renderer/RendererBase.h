@@ -92,8 +92,6 @@ namespace Pistachio {
 		static RendererBase& Get();
 		static const constexpr uint32_t numFramesInFlight = 3;
 	private:
-		static void BackBufferBarrier(RHI::PipelineStage before,RHI::PipelineStage after,RHI::ResourceLayout oldLayout, RHI::ResourceLayout newLayout,
-			RHI::ResourceAcessFlags prevAccess, RHI::ResourceAcessFlags currAccess);
 		friend class Renderer;
 		friend class Texture2D;
 		friend class RenderGraph;

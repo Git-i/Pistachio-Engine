@@ -11,8 +11,8 @@ namespace Pistachio {
 	int LastKeyPoll;
 	bool LinuxInputHandler::IsKeyPressed(KeyCode code)
 	{
-		if(code >= PT_MOUSE_BUTTON_1 && code <= PT_MOUSE_BUTTON_8) return glfwGetMouseButton(Application::Get().GetWindow().pd.window, code)==GLFW_PRESS;
-		return glfwGetKey(Application::Get().GetWindow().pd.window, code) == GLFW_PRESS;
+		if(code >= PT_MOUSE_BUTTON_1 && code <= PT_MOUSE_BUTTON_8) return glfwGetMouseButton(Application::Get().GetWindow()->pd.window, code)==GLFW_PRESS;
+		return glfwGetKey(Application::Get().GetWindow()->pd.window, code) == GLFW_PRESS;
 	}
 	bool LinuxInputHandler::IsKeyJustPressed(KeyCode code)
 	{
@@ -35,13 +35,13 @@ namespace Pistachio {
 	int LinuxInputHandler::GetMouseX(bool wndcoord)
 	{
 		double xpos, ypos;
-		glfwGetCursorPos(Application::Get().GetWindow().pd.window, &xpos, &ypos);
+		glfwGetCursorPos(Application::Get().GetWindow()->pd.window, &xpos, &ypos);
 		return xpos;
 	}
 	int LinuxInputHandler::GetMouseY(bool wndcoord)
 	{
 		double xpos, ypos;
-		glfwGetCursorPos(Application::Get().GetWindow().pd.window, &xpos, &ypos);
+		glfwGetCursorPos(Application::Get().GetWindow()->pd.window, &xpos, &ypos);
 		return ypos;
 	}
 
