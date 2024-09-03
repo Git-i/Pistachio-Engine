@@ -373,6 +373,10 @@ namespace Pistachio
             break;
         }
     }
+    RHI::Ptr<RHI::GraphicsCommandList> RenderGraph::GetFirstList()
+    {
+        return cmdLists[0];
+    }
     void RenderGraph::SetName(std::string_view _name)
     {
         name = _name;
@@ -993,7 +997,6 @@ namespace Pistachio
             cmdLists[i]->SetName(name.c_str());
         }
         dirty = false;
-        NewFrame();
     }
 
 }

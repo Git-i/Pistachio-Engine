@@ -1,3 +1,4 @@
+#include "Barrier.h"
 #include "Pistachio/Core/Log.h"
 #include "ptpch.h"
 #include "RendererBase.h"
@@ -118,6 +119,7 @@ namespace Pistachio
         barrier.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
         barrier.oldLayout = RHI::ResourceLayout::UNDEFINED;
         barrier.newLayout = RHI::ResourceLayout::SHADER_READ_ONLY_OPTIMAL;
+        barrier.previousQueue = barrier.nextQueue = RHI::QueueFamily::Ignored;
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
         range.imageAspect = RHI::Aspect::COLOR_BIT;

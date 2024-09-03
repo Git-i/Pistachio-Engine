@@ -79,7 +79,7 @@ namespace Pistachio
         auto& base = Application::Get().GetRendererBase();
         
         auto res = swapchain->Present(base.mainFence, base.fence_vals[(base.currentFrameIndex+2)%3]);
-		if(res == RHI::SwapChainError::OutOfDate)
+		if(res == RHI::SwapChainError::OutOfDate || res == RHI::SwapChainError::SubOptimal)
 		{
 			PT_CORE_WARN("SwapChain Out of Date");
 			auto wnd = Application::Get().GetWindow();

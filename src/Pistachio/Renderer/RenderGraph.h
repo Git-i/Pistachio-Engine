@@ -195,6 +195,7 @@ namespace Pistachio
 		void SetShader(Shader* shader);//Make sure the shader is already preconfigured to desired state
 		void SetDepthStencilOutput(AttachmentInfo* info);
 		std::function<void(RHI::Weak<RHI::GraphicsCommandList> list)> pass_fn;
+		
 	private:
 		friend class RenderGraph;
 		RHI::PipelineStage stage = RHI::PipelineStage::TOP_OF_PIPE_BIT;
@@ -258,6 +259,7 @@ namespace Pistachio
 		RGTextureInstance MakeUniqueInstance(RGTextureHandle texture);
 		RGBufferInstance MakeUniqueInstance(RGBufferHandle buffer);
 		RGBufferHandle CreateBuffer(RHI::Ptr<RHI::Buffer> buffer, uint32_t offset, uint32_t size, RHI::QueueFamily family = RHI::QueueFamily::Graphics);
+		RHI::Ptr<RHI::GraphicsCommandList> GetFirstList(); ///<-Only Valid after `Compile` is called
 		void Execute();
 	private:
 		template<typename PassTy>

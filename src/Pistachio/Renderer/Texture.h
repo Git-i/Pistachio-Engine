@@ -29,7 +29,7 @@ namespace Pistachio {
 		Compute = 1,
 	};
 	ENUM_FLAGS(TextureFlags);
-	class PISTACHIO_API Texture2D : public Texture
+	class PISTACHIO_API Texture2D final : public Texture
 	{
 	public:
 		RHI::Format GetFormat() const override;

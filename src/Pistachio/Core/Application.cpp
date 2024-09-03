@@ -49,9 +49,7 @@ namespace Pistachio {
 		m_renderer->Init();
 
 		Renderer2D::Init();
-		std::cout << "phys time" << std::endl;
 		//Physics::Init();
-		std::cout << "physics initialized" << std::endl;
 #ifdef IMGUI
 		PushOverlay(m_ImGuiLayer);
 #endif
