@@ -7,3 +7,6 @@
 [submodule "subprojects/rhi_sc"]
 	path = subprojects/rhi_sc
 	url = https://github.com/Git-i/rhi_sc.git
+[submodule "subprojects/pktx"]
+	path = subprojects/pktx
+	url = https://github.com/Git-i/pktx
