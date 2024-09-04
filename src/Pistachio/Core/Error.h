@@ -3,14 +3,20 @@
 #include "ptpch.h"
 #include "Log.h"
 #include <filesystem>
+#ifdef __GNUC__
+#define PT_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#endif
 namespace Pistachio {
 	enum class ErrorType
 	{
 		Success,
 		Unknown, 
-		ParameterError,
+		InvalidFile,
 		NonExistentFile,
 		OutOfMemory,
+		ProvidedInString,
+		ParameterError,
+		InvalidResourceType
 	};
 	class Error {
 	public:
@@ -49,13 +55,12 @@ namespace Pistachio {
 			{
 			case Pistachio::ErrorType::Unknown:
 				return "Unkown Internal Error";
-				break;
 			case Pistachio::ErrorType::NonExistentFile:
 				return (std::string("The file passed into the function doesn't exist: ") + std::string(e.GetReporterString()));
-				break;
-			case Pistachio::ErrorType::ParameterError:
-				return (std::string("A wrong parameter was passed into the function: ") + std::string(e.GetReporterString()));
-				break;
+			case Pistachio::ErrorType::InvalidResourceType:
+				return (std::string("Resource Type used does not exist: ") + std::string(e.GetReporterString()));
+			case Pistachio::ErrorType::ProvidedInString:
+				return e.GetReporterString();
 			default: return "Unregistered Error Type";
 				break;
 			}
@@ -71,6 +76,7 @@ namespace Pistachio {
 			PT_CORE_ASSERT(e.GetSeverity() != 2);
 		};
 		ErrorType GetErrorType() const { return type; };
+		bool Successful() const {return type == ErrorType::Success;}
 		const char* GetReporterString() const { return ReporterString.c_str(); };
 		static int GetErrorSeverity(ErrorType type){
 			switch (type)

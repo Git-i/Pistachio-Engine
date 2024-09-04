@@ -1,6 +1,12 @@
+#include "Pistachio/Asset/Asset.h"
+#include "Pistachio/Asset/RefCountedObject.h"
+#include "Pistachio/Core/Error.h"
+#include "Pistachio/Renderer/Texture.h"
 #include "ptpch.h"
 #include "Pistachio/Renderer/Material.h"
 #include <cstdint>
+#include <optional>
+#include <type_traits>
 #include "AssetManager.h"
 
 namespace Pistachio
@@ -105,19 +111,19 @@ namespace Pistachio
 	{
 		return m_count_;
 	}
-	Asset AssetManager::CreateMaterialAsset(const std::string& filename)
+	Result<Asset> AssetManager::CreateMaterialAsset(const std::string& filename)
 	{
 		return CreateAsset(filename, ResourceType::Material);
 	}
-	Asset AssetManager::CreateTexture2DAsset(const std::string& filename)
+	Result<Asset> AssetManager::CreateTexture2DAsset(const std::string& filename)
 	{
 		return CreateAsset(filename, ResourceType::Texture);
 	}
-	Asset AssetManager::CreateModelAsset(const std::string& filename)
+	Result<Asset> AssetManager::CreateModelAsset(const std::string& filename)
 	{
 		return CreateAsset(filename, ResourceType::Model);
 	}
-	Asset AssetManager::CreateShaderAsset(const std::string& filename)
+	Result<Asset> AssetManager::CreateShaderAsset(const std::string& filename)
 	{
 		return CreateAsset(filename, ResourceType::Shader);
 	}
@@ -171,26 +177,32 @@ namespace Pistachio
 		}
 		return nullptr;
 	}
-	Asset AssetManager::CreateAsset(const std::string& filename, ResourceType type)
+	std::optional<Asset> AssetManager::GetAsset(const std::string& filename)
+	{
+		if(pathUUIDMap.contains(filename)) return Asset(pathUUIDMap[filename], ResourceType::Unknown);
+		return std::nullopt;
+	}
+	Result<Asset> AssetManager::CreateAsset(const std::string& filename, ResourceType type)
 	{
 		if (auto it = pathUUIDMap.find(filename); it != pathUUIDMap.end())
 		{
-			//assetResourceMap[it->second]->hold();
-			return Asset(it->second, type);
+			return ezr::ok(Asset(it->second, type));
 		}
 		else
 		{
 			UUID uuid = UUID();
-			RefCountedObject* obj;
-			if (type == ResourceType::Texture) obj = Texture2D::Create(filename.c_str() PT_DEBUG_REGION(, filename.c_str()));
-			else if (type == ResourceType::Material) obj = Material::Create(filename.c_str());
-			else if (type == ResourceType::Shader) obj = ShaderAsset::Create(filename.c_str());
-			else if (type == ResourceType::Model) obj = Model::Create(filename.c_str()).value();
-			else obj = new RefCountedObject;
-			assetResourceMap[uuid] = obj;
-			//obj->hold();
+			Result<RefCountedObject*> obj;
+			auto result_to_ref_obj = [](auto&& result) -> RefCountedObject* { return static_cast<RefCountedObject*>(result); };
+			if (type == ResourceType::Texture) obj = Texture2D::Create(filename.c_str(), filename.c_str()).transform(result_to_ref_obj);
+			else if (type == ResourceType::Material) obj = Material::Create(filename.c_str()).transform(result_to_ref_obj);
+			else if (type == ResourceType::Shader) obj = ShaderAsset::Create(filename.c_str()).transform(result_to_ref_obj);
+			else if (type == ResourceType::Model) obj = Model::Create(filename.c_str()).transform(result_to_ref_obj);
+			else obj = ezr::err(Error(ErrorType::InvalidResourceType, PT_PRETTY_FUNCTION));
+
+			if(!obj) return ezr::err(std::move(obj).err());
+			assetResourceMap[uuid] = obj.value();
 			pathUUIDMap[filename] = uuid;
-			return Asset(uuid, type);
+			return ezr::ok(Asset(uuid, type));
 		}
 	}
 	Asset AssetManager::FromResource(RefCountedObject* resource,const std::string& in, ResourceType type)

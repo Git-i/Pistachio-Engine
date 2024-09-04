@@ -1,3 +1,4 @@
+#include "Pistachio/Core/Error.h"
 #include "Ptr.h"
 #include "ptpch.h"
 #include "Material.h"
@@ -91,7 +92,7 @@ namespace Pistachio
 		fout.close();
 	}
 	
-	Material* Material::Create(const char* filepath)
+	Result<Material*> Material::Create(const char* filepath)
 	{
 		Material* mat = new Material;
 		std::ifstream stream(filepath);
@@ -100,21 +101,34 @@ namespace Pistachio
 		YAML::Node data = YAML::Load(strStream.str());
 		if (!data["Material"])
 		{
-			PT_CORE_ERROR("The file {0} is not a valid Pistachio Material", filepath);
-			return mat;
+			delete mat;
+			return ezr::err(Error(ErrorType::InvalidFile, PT_PRETTY_FUNCTION));
 		}
 		uint32_t numTextures = data["Num Textures"].as<uint32_t>();
 		for (uint32_t i = 0; i < numTextures; i++)
 		{
-			mat->m_textures.push_back(GetAssetManager()->CreateTexture2DAsset(data[std::to_string(i)].as<std::string>()));
+			auto asset = GetAssetManager()->CreateTexture2DAsset(data[std::to_string(i)].as<std::string>());
+			if(asset.is_err())
+			{
+				delete mat;
+				return asset.transform([](auto a) -> Material* {return nullptr;});
+			}
+			mat->m_textures.push_back(asset.value());
 		}
 		std::string shader_name = data["Shader Asset"].as<std::string>();
-		mat->shader = GetAssetManager()->CreateShaderAsset(shader_name);
+		auto e = GetAssetManager()->CreateShaderAsset(shader_name)
+			.handle([&mat](auto&& asset){
+				mat->shader = asset;
+				return Error(ErrorType::Success);
+			}, [](auto&& error){
+				return error;
+			});
+		if(!e.Successful()) return ezr::err(std::move(e));
 		ShaderAsset* shader = GetAssetManager()->GetShaderResource(mat->shader);
 		shader->GetShader().GetShaderBinding(mat->mtlInfo, 3);
 		Renderer::AllocateConstantBuffer(shader->GetParamBufferSize());
 		
-		return mat;
+		return ezr::ok(mat);
 	}
 	void Material::SetShader(Asset _shader)
 	{

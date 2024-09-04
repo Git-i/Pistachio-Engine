@@ -10,10 +10,11 @@ namespace Pistachio
 	class PISTACHIO_API AssetManager
 	{
 	public:
-		Asset CreateMaterialAsset(const std::string& filename);
-		Asset CreateTexture2DAsset(const std::string& filename);
-		Asset CreateModelAsset(const std::string& filename);
-		Asset CreateShaderAsset(const std::string& filename);
+		Result<Asset> CreateMaterialAsset(const std::string& filename);
+		Result<Asset> CreateTexture2DAsset(const std::string& filename);
+		Result<Asset> CreateModelAsset(const std::string& filename);
+		Result<Asset> CreateShaderAsset(const std::string& filename);
+		std::optional<Asset> GetAsset(const std::string& resource_name);
 		std::string GetAssetFileName(const Asset& asset);
 		void ReportLiveObjects();
 		Material* GetMaterialResource(Asset& a);
@@ -25,7 +26,7 @@ namespace Pistachio
 		Asset FromResource(RefCountedObject* resource, const std::string& str_id, ResourceType type);
 	private:
 		friend class Renderer;
-		Asset CreateAsset(const std::string& filename, ResourceType type);
+		Result<Asset> CreateAsset(const std::string& filename, ResourceType type);
 	private:
 		std::unordered_map<std::string, UUID> pathUUIDMap;
 		std::unordered_map<UUID, RefCountedObject*> assetResourceMap;

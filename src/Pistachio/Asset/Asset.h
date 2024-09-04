@@ -10,7 +10,8 @@ namespace Pistachio
 		Material,
 		Animation,
 		Audio,
-		Shader
+		Shader,
+		Unknown // This means valid
 	};
 	class PISTACHIO_API Asset
 	{

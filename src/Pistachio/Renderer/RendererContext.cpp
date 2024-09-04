@@ -8,6 +8,7 @@
 #include "Pistachio/Core/Log.h"
 #include "Pistachio/Renderer/Shader.h"
 #include "Pistachio/Renderer/ShaderAsset.h"
+#include "Pistachio/Utils/RendererUtils.h"
 #include "RootSignature.h"
 #include "ShaderReflect.h"
 #include <initializer_list>

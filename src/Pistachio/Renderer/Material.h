@@ -6,6 +6,7 @@
 #include "../Core/Math.h"
 #include "../Asset/AssetManager.h"
 #include "BufferHandles.h"
+#include "Pistachio/Core/Error.h"
 #include "ShaderAsset.h"
 #include "Texture.h"
 #include "Renderer.h"
@@ -18,7 +19,7 @@ namespace Pistachio
 	public:
 		void ChangeTexture(uint32_t slot, Texture* texture);
 		template<typename ParamTy> void ChangeParam(const std::string& name, const ParamTy& value);
-		static Material* Create(const char* filepath);
+		static Result<Material*> Create(const char* filepath);
 		void SetShader(Asset shader);
 		const Asset& GetShader() { return shader; }
 		//Unsafe: use only if you wrote this engine or know what you're doing

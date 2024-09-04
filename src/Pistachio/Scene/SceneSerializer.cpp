@@ -301,9 +301,9 @@ namespace Pistachio {
 					auto mat = meshrenderercomponent["Material"].as<std::string>();
 					auto model = meshrenderercomponent["Model"].as<std::string>();
 					if (mat != "None")
-						mr.material = GetAssetManager()->CreateMaterialAsset(mat);
+						mr.material = GetAssetManager()->CreateMaterialAsset(mat).value_or(Asset{});
 					if (model != "None")
-						mr.Model = GetAssetManager()->CreateModelAsset(model);
+						mr.Model = GetAssetManager()->CreateModelAsset(model).value_or(Asset{});
 				}
 			}
 			int i = 0;

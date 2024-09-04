@@ -142,7 +142,7 @@ namespace Pistachio {
 		ComputeShader* shd_tightenList = Renderer::GetBuiltinComputeShader("Tighten Clusters");
 		ComputeShader* shd_cullLights = Renderer::GetBuiltinComputeShader("Cull Lights");
 		Shader* shd_prepass = Renderer::GetBuiltinShader("Z-Prepass");
-		Shader* shd_fwd = &assetMan->GetShaderResource(assetMan->CreateShaderAsset("Default Shader"))->GetShader();
+		Shader* shd_fwd = &assetMan->GetShaderResource(*assetMan->GetAsset("Default Shader"))->GetShader();
 		Shader* shd_Shadow = Renderer::GetBuiltinShader("Shadow Shader");
 		Shader* shd_background = Renderer::GetBuiltinShader("Background Shader");
 		for (uint32_t i = 0; i < RendererBase::numFramesInFlight; i++)

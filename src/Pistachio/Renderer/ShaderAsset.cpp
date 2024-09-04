@@ -1,20 +1,48 @@
+#include "Pistachio/Core/Application.h"
+#include "Pistachio/Core/Error.h"
 #include "RootSignature.h"
 #include "ptpch.h"
 #include "ShaderAsset.h"
 #include "Pistachio/Utils/PlatformUtils.h"
+#include <filesystem>
 #include <string_view>
 namespace Pistachio
 {
+    void ReadRHICode(std::vector<char>& code, std::ifstream& file)
+    {
+        uint32_t spvSize = 0;
+        file.read((char*)&spvSize, sizeof(uint32_t));
+        spvSize = Edian::ConvertToSystemEndian(spvSize, Pistachio::Little);
+        RHI::API api = RendererBase::GetAPI();
+        if (api == RHI::API::Vulkan)
+        {
+            code.resize(spvSize);
+            file.read(code.data(), spvSize);
+        }
+        else //(api == RHI::API::DX12)
+        {
+            uint32_t spvPadding = 4 * sizeof(uint32_t);
+            auto dxilStart = file.seekg(spvSize + spvPadding, std::ios::cur).tellg();
+            auto dxilEnd = file.seekg(0, std::ios::end).tellg();
+            uint32_t dxilSize = dxilEnd - dxilStart;
+            file.seekg(dxilStart, std::ios::beg);
+            file.read((char*)&dxilSize, sizeof(uint32_t));
+            dxilSize = Edian::ConvertToSystemEndian(dxilSize, Pistachio::Little);
+            code.resize(dxilSize);
+            file.read(code.data(), dxilSize);
+        }
+    }
     std::vector<char>      ShaderAsset::vs;
     ShaderAsset::~ShaderAsset()
     {
         //shader.VS.data = nullptr; //avoid the shader destructor deletin this
     }
-    ShaderAsset* ShaderAsset::Create(const char* filename)
+    Result<ShaderAsset*> ShaderAsset::Create(const char* filename)
     {
-        ShaderAsset* returnVal = new ShaderAsset;
+        if(!std::filesystem::exists(filename)) return ezr::err(Error(ErrorType::InvalidFile, PT_PRETTY_FUNCTION));
         std::ifstream infile(filename, std::ios::binary);
-        PT_CORE_ASSERT(infile);
+        if(!infile) return ezr::err(Error(ErrorType::Unknown, PT_PRETTY_FUNCTION));
+        ShaderAsset* returnVal = new ShaderAsset;
         uint32_t numParams = 0;
         infile.read((char*)&numParams, sizeof(uint32_t));
         numParams = Edian::ConvertToSystemEndian(numParams, Pistachio::Big);
@@ -66,34 +94,15 @@ namespace Pistachio
             slot = Edian::ConvertToSystemEndian(slot, Pistachio::Big);
             returnVal->bindingsMap[std::move(bindingName)] = slot;
         }
-        RHI::API api = RendererBase::GetAPI();
-        uint32_t spvSize = 0;
-        infile.read((char*)&spvSize, sizeof(uint32_t));
-        spvSize = Edian::ConvertToSystemEndian(spvSize, Pistachio::Big);
+        
         std::vector<char> code;
         RHI::Ptr<RHI::ShaderReflection> PSReflection;
-        if (api == RHI::API::Vulkan)
-        {
-            code.resize(spvSize);
-            infile.read(code.data(), spvSize);
-        }
-        else //(api == RHI::API::DX12)
-        {
-            infile.seekg(spvSize, std::ios::cur);
-            uint32_t dxilSize = 0;
-            infile.read((char*)&dxilSize, sizeof(uint32_t));
-            dxilSize = Edian::ConvertToSystemEndian(dxilSize, Pistachio::Big);
-            code.resize(dxilSize);
-            infile.read(code.data(), dxilSize);
-        }
+        ReadRHICode(code, infile);
         
         if (vs.size() <= 0)
         {
-            std::ifstream vertexShaderFile("resources/shaders/vertex/Compiled/VertexShader", std::ios::binary | std::ios::ate);
-            size_t vsSize = vertexShaderFile.tellg();
-            vs.resize(vsSize);
-            vertexShaderFile.seekg(0, std::ios::beg);
-            vertexShaderFile.read(vs.data(), vsSize);
+            std::ifstream vertexShaderFile(Application::Get().GetShaderDir() + "VertexShader.rbc", std::ios::binary | std::ios::ate);
+            ReadRHICode(vs, vertexShaderFile);
         }
         RHI::BlendMode blendMode{};
         blendMode.BlendAlphaToCoverage = false;
@@ -121,7 +130,7 @@ namespace Pistachio
 
 
         returnVal->shader.CreateStack(desc, {{1u}}, std::nullopt);
-        return returnVal;
+        return ezr::ok(returnVal);
     }
     ParamInfo ShaderAsset::GetParameterInfo(const std::string& paramName)
     {

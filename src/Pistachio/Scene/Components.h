@@ -70,7 +70,9 @@ namespace Pistachio{
 		~MeshRendererComponent() = default;
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent& other) = default;
-		MeshRendererComponent(const char* path) { Model = GetAssetManager()->CreateModelAsset(path); }
+		MeshRendererComponent(const char* path) { 
+			Model = GetAssetManager()->CreateModelAsset(path).value_or(Asset{}); 
+		}
 	};
 	// ----------------------------------------------------------------------------------------------------------------------
 	struct PISTACHIO_API SpriteRendererComponent {

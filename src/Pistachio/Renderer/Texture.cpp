@@ -1,13 +1,15 @@
-#include "Pistachio/Core/Log.h"
-#include "ptpch.h"
+#include "Pistachio/Core/Error.h"
+#include "Ptr.h"
 #include "Texture.h"
 #include "Util/FormatUtils.h"
 #include "stb_image.h"
 #include "RendererBase.h"
+#include <filesystem>
 namespace Pistachio
 {
-    void Texture2D::CreateTexture(void* data, TextureFlags flags)
+    Error Texture2D::CreateTexture(void* data, TextureFlags flags)
     {
+        Error e;
         PT_PROFILE_FUNCTION();
         RHI::TextureDesc desc{};
         desc.depthOrArraySize = 1;
@@ -23,7 +25,15 @@ namespace Pistachio
         desc.usage |= ((flags & TextureFlags::Compute) != TextureFlags::None) ? RHI::TextureUsage::StorageImage : RHI::TextureUsage::None;
         RHI::AutomaticAllocationInfo allocInfo;
         allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-        m_ID = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
+        e = RendererBase::GetDevice()->CreateTexture(desc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic)
+            .handle([this](auto&& texture){
+                m_ID = texture;
+                return Error(ErrorType::Success);
+            }, [](auto&& e){
+                return Error::FromRHIError(e);
+            });
+        if(!e.Successful()) return e; 
+        
         RHI::SubResourceRange range;
         range.FirstArraySlice = 0;
         range.imageAspect = RHI::Aspect::COLOR_BIT;
@@ -63,7 +73,14 @@ namespace Pistachio
         viewDesc.range = range;
         viewDesc.texture = m_ID;
         viewDesc.type = RHI::TextureViewType::Texture2D;
-        m_view = RendererBase::GetDevice()->CreateTextureView(viewDesc).value();
+        e = RendererBase::GetDevice()->CreateTextureView(viewDesc).handle([this](auto&& view){
+            m_view = view;
+            return Error(ErrorType::Success);
+        }, [this](auto&& error){
+            m_ID = nullptr;
+            return Error::FromRHIError(error);
+        });
+        return e;
     }
     RHI::Format Texture2D::GetFormat() const
     {
@@ -87,106 +104,68 @@ namespace Pistachio
         PT_PROFILE_FUNCTION();
     }
 
-    Texture2D* Texture2D::Create(const char* path PT_DEBUG_REGION(, const char* name), RHI::Format format, TextureFlags flags)
+    Result<Texture2D*> Texture2D::Create(const char* path , const char* name, RHI::Format format, TextureFlags flags)
     {
         PT_PROFILE_FUNCTION();
         Texture2D* result = new Texture2D;
-        result->CreateStack(path, format PT_DEBUG_REGION(, name));
-        return result;
+        auto e = result->CreateStack(path, format , name);
+        if(!e.Successful())
+        {
+            delete result;
+            return Result<Texture2D*>(e);
+        }
+        return Result<Texture2D*>(result);
     }
-    void Texture2D::CreateStack(const char* path, RHI::Format format PT_DEBUG_REGION(, const char* name), TextureFlags flags )
+    Error Texture2D::CreateStack(const char* path, RHI::Format format , const char* name, TextureFlags flags )
     {
         PT_PROFILE_FUNCTION();
+        if(!std::filesystem::exists(path))
+        {
+            return Error(ErrorType::NonExistentFile, __FUNCTION__);
+        }
         int Width, Height, nChannels;
-        void* data;
+        void* data = nullptr;
         if (format == RHI::Format::R16G16B16A16_FLOAT || format == RHI::Format::R32G32B32A32_FLOAT )
         {
-            PT_PROFILE_SCOPE("stbi_loadf");
             data = stbi_loadf(path, &Width, &Height, &nChannels, 4);
-            PT_CORE_ASSERT(data);
+            if(!data) return Error(ErrorType::ProvidedInString, stbi_failure_reason());
         }
         else
         {
-            PT_PROFILE_SCOPE("stbi_load");
             data = stbi_load(path, &Width, &Height, &nChannels, 4);
-            PT_CORE_ASSERT(data);
+            if(!data) return Error(ErrorType::ProvidedInString, stbi_failure_reason());
         }
         m_Width = Width;
         m_Height = Height;
         m_format = format;
-        CreateTexture(data, flags);
-        PT_DEBUG_REGION(if(m_ID.IsValid()) m_ID->SetName(name)); 
+        auto e = CreateTexture(data, flags);
+        if(m_ID.IsValid() && name) m_ID->SetName(name); 
         stbi_image_free(data);
+        return e;
     }
-    void Texture2D::CreateStack(uint32_t width, uint32_t height, RHI::Format format, void* data PT_DEBUG_REGION(, const char* name),TextureFlags flags)
+    Error Texture2D::CreateStack(uint32_t width, uint32_t height, RHI::Format format, void* data , const char* name,TextureFlags flags)
     {
         PT_PROFILE_FUNCTION();
         m_Width = width;
         m_Height = height;
         m_format = format;
-        CreateTexture(data, flags);
-        PT_DEBUG_REGION(if(m_ID.IsValid()) m_ID->SetName(name));
+        auto e = CreateTexture(data, flags);
+        if(e.Successful() && name) m_ID->SetName(name);
+        return e;
     }
-    void Texture2D::CopyIntoRegion(Texture2D& source, unsigned int location_x, unsigned int location_y, unsigned int src_left, unsigned int src_right, unsigned int src_up, unsigned int src_down, unsigned int mipSlice, unsigned int arraySlice)
-    {
-        //PT_PROFILE_FUNCTION();
-        //ID3D11Resource* pDstResource;
-        //ID3D11Resource* pSrcResource;
-        //if (m_bHasView)
-        //    ((ID3D11ShaderResourceView*)m_ID.Get())->GetResource(&pDstResource);
-        //else
-        //    pDstResource = (ID3D11Resource*)(m_ID.Get());
-        //((ID3D11ShaderResourceView*)source.m_ID.Get())->GetResource(&pSrcResource);
-        //D3D11_BOX sourceRegion;
-        //sourceRegion.left = src_left;
-        //sourceRegion.right = src_right;
-        //sourceRegion.top = src_up;
-        //sourceRegion.bottom = src_down;
-        //sourceRegion.front = 0;
-        //sourceRegion.back = 1;
-        //RendererBase::Getd3dDeviceContext()->CopySubresourceRegion(pDstResource, D3D11CalcSubresource(mipSlice, arraySlice, m_MipLevels), location_x, location_y, 0, pSrcResource, 0, &sourceRegion);
-        //if (m_bHasView)
-        //    pDstResource->Release();
-        //pSrcResource->Release();
-    }
-    void Texture2D::CopyInto(Texture2D& source)
-    {
-        //PT_PROFILE_FUNCTION();
-        //ID3D11Resource* pDstResource;
-        //ID3D11Resource* pSrcResource;
-        //if (m_bHasView)
-        //    ((ID3D11ShaderResourceView*)m_ID.Get())->GetResource(&pDstResource);
-        //else
-        //    pDstResource = (ID3D11Resource*)(m_ID.Get());
-        //((ID3D11ShaderResourceView*)source.m_ID.Get())->GetResource(&pSrcResource);
-        //RendererBase::Getd3dDeviceContext()->CopyResource(pDstResource, pSrcResource);
-        //if (m_bHasView)
-        //    pDstResource->Release();
-        //pSrcResource->Release();
-    }
-    void Texture2D::CopyToCPUBuffer(void* buffer)
-    {
-        //todo rework this function
-        //Texture2D cptex;
-        //cptex.CreateStack(1280, 720, TextureFormat::RGBA8U, nullptr, (TextureFlags)((unsigned int)TextureFlags::ALLOW_CPU_ACCESS_READ | (unsigned int)TextureFlags::USAGE_STAGING));
-        //cptex.CopyInto(*this);
-        //D3D11_MAPPED_SUBRESOURCE sr;
-        //ZeroMemory(&sr, sizeof(D3D11_MAPPED_SUBRESOURCE));
-        //D3D11_TEXTURE2D_DESC desc;
-        //ID3D11Texture2D* tex = (ID3D11Texture2D*)cptex.m_ID.Get();
-        //tex->GetDesc(&desc);
-        //HRESULT hr = Pistachio::RendererBase::Getd3dDeviceContext()->Map(tex, 0, D3D11_MAP_READ, 0, &sr);
-        //memcpy(buffer, sr.pData, m_Height * m_Width * RendererUtils::TextureFormatBytesPerPixel(m_format));
-        //Pistachio::RendererBase::Getd3dDeviceContext()->Unmap((ID3D11Texture2D*)tex, 0);
-    }
-    Texture2D* Texture2D::Create(uint32_t width, uint32_t height, RHI::Format format, void* data PT_DEBUG_REGION(, const char* name), TextureFlags flags)
+    Result<Texture2D*> Texture2D::Create(uint32_t width, uint32_t height, RHI::Format format, void* data , const char* name, TextureFlags flags)
     {
         PT_PROFILE_FUNCTION();
-            Texture2D* result = new Texture2D;
+        Texture2D* result = new Texture2D;
         result->m_Width = width;
         result->m_Height = height;
-        result->CreateStack(width, height, format, data PT_DEBUG_REGION(, name), flags);
-        return result;
+        auto e = result->CreateStack(width, height, format, data , name, flags);
+        if(!e.Successful()) 
+        {
+            delete result;
+            return Result<Texture2D*>(e);
+        }
+        return Result<Texture2D*>(result);
     }
     bool Texture2D::operator==(const Texture2D& texture) const
     {
