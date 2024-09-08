@@ -45,7 +45,6 @@ namespace Pistachio {
 		friend class RenderTexture;
 		friend class RenderCubeMap;
 	private:
-		
 		unsigned int m_Width, m_Height, m_MipLevels;
 		RHI::Format m_format;
 		RHI::Ptr<RHI::TextureView> m_view;

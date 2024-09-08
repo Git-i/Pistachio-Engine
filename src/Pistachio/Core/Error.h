@@ -3,6 +3,7 @@
 #include "ptpch.h"
 #include "Log.h"
 #include <filesystem>
+#include "pktx/texture.h"
 #ifdef __GNUC__
 #define PT_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
@@ -48,6 +49,10 @@ namespace Pistachio {
 				default: t = ErrorType::Unknown;
 			}
 			return report ? Error(t, str) : Error(t);
+		}
+		static Error FromKTXError(ktx_error_code_e e, const std::string& str = "")
+		{
+			return Error(ErrorType::Unknown); //todo
 		}
 		Error(ErrorType etype, const std::string& funcsig) :type(etype),ReporterString(funcsig), severity(GetErrorSeverity(etype)){ };
 		inline static std::string GetErrorString(const Error& e) {

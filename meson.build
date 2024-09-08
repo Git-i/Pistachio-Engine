@@ -22,6 +22,9 @@ as_addons_dep = angelscript.get_variable('as_addons_dep')
 rhi = subproject('RHI')
 rhi_dep = rhi.get_variable('rhi_dep')
 
+pktx = subproject('pktx')
+pktx_dep = pktx.get_variable('pktx_dep')
+
 rhi_sc = subproject('rhi_sc')
 rhi_sc_dep = rhi_sc.get_variable('rhi_sc_dep')
 rhi_sc_exe = rhi_sc.get_variable('rhi_sc_exe')
@@ -45,6 +48,7 @@ deps = [
     xxhash_dep,
     angelscript_dep,
     as_addons_dep,
+    pktx_dep,
     rhi_sc_dep,]
 
 if(get_option('profiler_support') == 'tracy')
@@ -98,6 +102,7 @@ sources = [
     'src/Pistachio/Renderer/RenderTexture.cpp',
     'src/Pistachio/Renderer/RendererBase.cpp',
     'src/Pistachio/Renderer/Mesh.cpp',
+    'src/Pistachio/Renderer/Skybox.cpp',
     'src/Pistachio/Renderer/Material.cpp',
     'src/Pistachio/Asset/AssetManager.cpp',
     'src/Pistachio/Physics/Physics.cpp',
