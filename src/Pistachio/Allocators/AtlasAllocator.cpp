@@ -77,11 +77,11 @@ namespace Pistachio
         iVector2 bestPos = { 0,0 };
         float bestScore = FLT_MAX;
         iVector2 numPortions = size / m_portion_size;
-        for (int i = 0; i < m_portions.size(); i++)
+        for (uint32_t i = 0; i < m_portions.size(); i++)
         {
             Row& row = m_portions[i];
             //Per entry
-            for (int j = 0; j < row.size(); j++)
+            for (uint32_t j = 0; j < row.size(); j++)
             {
                 if ((row.size() - j) < numPortions.x)
                     continue;
@@ -137,7 +137,7 @@ namespace Pistachio
         while (findit != indexRegionMap.end()) //check if the id is available
         {
             id++;
-            auto findit = indexRegionMap.find(id);
+            findit = indexRegionMap.find(id);
         }
         indexRegionMap[id] = { bestPos , portion_size };
         return id;

@@ -8,7 +8,8 @@
 namespace Pistachio {
 
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
-		: m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), RuntimeCamera(Matrix4::CreatePerspectiveFieldOfView(DirectX::XMConvertToRadians(fov), aspectRatio, nearClip, farClip))
+		: RuntimeCamera(Matrix4::CreatePerspectiveFieldOfView(DirectX::XMConvertToRadians(fov), aspectRatio, nearClip, farClip)),
+		m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip)
 	{
 		UpdateView();
 	}
@@ -104,7 +105,6 @@ namespace Pistachio {
 
 	void EditorCamera::MouseZoom(float delta)
 	{
-		float speed = ZoomSpeed();
 		m_Distance -= delta * ZoomSpeed();
 		if (m_Distance < 1.0f)
 		{

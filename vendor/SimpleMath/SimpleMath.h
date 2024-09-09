@@ -46,7 +46,9 @@ struct RECT
 typedef uint32_t UINT;
 #endif
 #ifdef __GNUC__
-#define CDECL __attribute__((__cdecl__))
+#ifndef CDECL
+#define CDECL //__attribute__((__cdecl__))
+#endif
 #else
 #define CDECL __cdecl
 #endif

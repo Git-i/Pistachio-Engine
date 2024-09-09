@@ -103,6 +103,7 @@ sources = [
     'src/Pistachio/Renderer/RendererBase.cpp',
     'src/Pistachio/Renderer/Mesh.cpp',
     'src/Pistachio/Renderer/Skybox.cpp',
+    'src/Pistachio/Renderer/Cubemap.cpp',
     'src/Pistachio/Renderer/Material.cpp',
     'src/Pistachio/Asset/AssetManager.cpp',
     'src/Pistachio/Physics/Physics.cpp',

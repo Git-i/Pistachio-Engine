@@ -93,7 +93,7 @@ namespace Pistachio
     {
         return ValidatePFTexture(pktx::Texture::CreateFromMemory((uint8_t*)mem, size, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT));
     }
-    Error Skybox::InitializeCubeMaps(const pktx::Texture& base_ktx,const pktx::Texture& ir_ktx,const pktx::Texture& pf_ktx)
+    Error Skybox::InitializeCubeMaps(pktx::Texture& base_ktx, pktx::Texture& ir_ktx, pktx::Texture& pf_ktx)
     {
         auto e = CubeMap::Create(base_ktx).handle(
             [this](auto&& cm){

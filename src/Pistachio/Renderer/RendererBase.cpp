@@ -232,15 +232,7 @@ namespace Pistachio {
 		allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::Sequential;
 		stagingBuffer = device->CreateBuffer(stagingBufferDesc, nullptr, nullptr, &allocInfo, 0, RHI::ResourceType::Automatic).value();
 
-		allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
-		auto textureDesc = RHI::TextureDesc{
-			.width = 1,
-			.height = 1,
-			.depthOrArraySize = 1,
-			.format = RHI::Format::R8G8B8A8_UNORM,
-			.mipLevels = 1,
-			.mode = RHI::TextureTilingMode::Optimal,	
-		};
+		
 
 		uint8_t whiteData[4] = {255,255,255,255};
 		uint8_t blackData[4] = {0,0,0,0};

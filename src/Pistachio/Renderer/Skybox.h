@@ -21,6 +21,6 @@ namespace Pistachio
         CubeMap* ir{}; 
         CubeMap* pf{};
     private:
-        Error InitializeCubeMaps(const pktx::Texture&,const pktx::Texture&,const pktx::Texture&);
+        Error InitializeCubeMaps(pktx::Texture&, pktx::Texture&, pktx::Texture&);
     };
 }

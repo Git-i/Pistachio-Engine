@@ -87,4 +87,46 @@ namespace Pistachio
         view = tex_view;
         return Error(ErrorType::Success);
     }
+    Error CubeMap::Initialize(uint32_t width, uint32_t height, RHI::Format format)
+    {
+        RHI::Ptr<RHI::Texture> tex;
+        RHI::Ptr<RHI::TextureView> tex_view;
+        RHI::AutomaticAllocationInfo alloc_info{RHI::AutomaticAllocationCPUAccessMode::None};
+        auto err = RendererBase::GetDevice()->CreateTexture(RHI::TextureDesc{
+            .type = RHI::TextureType::Texture2D,
+            .width = width,
+            .height = height,
+            .depthOrArraySize = 6,
+            .format = format,
+            .mipLevels = 1,
+            .sampleCount = 1,
+            .mode = RHI::TextureTilingMode::Optimal,
+            .optimizedClearValue = nullptr,
+            .usage = RHI::TextureUsage::CopyDst | RHI::TextureUsage::SampledImage | RHI::TextureUsage::CubeMap
+        }, nullptr, nullptr, &alloc_info, 0, RHI::ResourceType::Automatic)
+        .handle(
+            [&tex](auto&& texture) {
+                tex = texture; return Error(ErrorType::Success);
+            },
+            [](auto&& err) {return Error::FromRHIError(err);}
+        );
+        if(!err.Successful()) return err;
+        err = RendererBase::GetDevice()->CreateTextureView(RHI::TextureViewDesc {
+            .type = RHI::TextureViewType::TextureCube,
+            .format = format,
+            .texture = tex,
+            .range {
+                .imageAspect = RHI::Aspect::COLOR_BIT,
+                .IndexOrFirstMipLevel = 0,
+                .NumMipLevels = 1,
+                .FirstArraySlice = 0,
+                .NumArraySlices = 6
+            }
+        }).handle([&tex_view](auto&& view) {tex_view = view; return Error(ErrorType::Success);},
+            [](auto&& err){return Error::FromRHIError(err);});
+        if(!err.Successful()) return err;
+        ID = tex;
+        view = tex_view;
+        return Error(ErrorType::Success);
+    }
 }

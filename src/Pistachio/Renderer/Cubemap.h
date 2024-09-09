@@ -12,6 +12,8 @@ namespace Pistachio
         [[nodiscard]] static Result<CubeMap*> Create(uint32_t width, uint32_t height, RHI::Format format);
         [[nodiscard]] Error Initialize(std::string_view path);
         [[nodiscard]] Error Initialize(pktx::Texture& texture);
+        [[nodiscard]] Error Initialize(uint32_t width, uint32_t height, RHI::Format format);
+        [[nodiscard]] RHI::Ptr<RHI::TextureView> GetView() const {return view;};
     private:
         uint32_t width, height;
         RHI::Ptr<RHI::Texture> ID;

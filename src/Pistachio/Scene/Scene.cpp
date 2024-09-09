@@ -104,8 +104,6 @@ static DirectX::XMMATRIX GetLightMatrixFromCamera(const DirectX::XMMATRIX& camVi
 static const uint32_t clusterAABBsize = ((sizeof(float) * 4) * 2);
 namespace Pistachio {
 
-	//todo extremely temprary
-	static Shader* envshader;
 	Scene::Scene(SceneDesc desc) : sm_allocator({ 4096, 4096 }, { 256, 256 })
 	{
 		PT_PROFILE_FUNCTION();
@@ -134,8 +132,6 @@ namespace Pistachio {
 		shadowMarker.CreateStack(nullptr, sizeof(uint32_t));
 		shadowMapAtlas.CreateStack(4096, 4096,1, RHI::Format::D32_FLOAT PT_DEBUG_REGION(, "Scene -> Shadow Map"));
 		computeShaderMiscBuffer.CreateStack(nullptr, sizeof(uint32_t) * 2, SBCreateFlags::None);
-		irSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM, "Scene -> irSkybox");
-		pfSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM, "Scene -> pfSkybox");
 		
 		ComputeShader* shd_buildClusters = Renderer::GetBuiltinComputeShader("Build Clusters");
 		ComputeShader* shd_activeClusters = Renderer::GetBuiltinComputeShader("Filter Clusters");
@@ -164,8 +160,8 @@ namespace Pistachio {
 		}
 		shd_fwd->GetShaderBinding(sceneInfo, 2);
 		sceneInfo.UpdateTextureBinding(Renderer::GetBrdfTexture().GetView(), 0);
-		sceneInfo.UpdateTextureBinding(irSkybox.GetView(), 1);
-		sceneInfo.UpdateTextureBinding(pfSkybox.GetView(), 2);
+		sceneInfo.UpdateTextureBinding(Renderer::GetDefaultCubeMap().GetView(), 1);
+		sceneInfo.UpdateTextureBinding(Renderer::GetDefaultCubeMap().GetView(), 2);
 		sceneInfo.UpdateTextureBinding(shadowMapAtlas.GetView(), 3);
 
 		sceneInfo.UpdateBufferBinding(lightGrid.GetID(), 0, numClusters * sizeof(uint32_t) * 4, RHI::DescriptorType::StructuredBuffer, 4);
@@ -580,10 +576,6 @@ namespace Pistachio {
 			};
 		}
 		graph.Compile();
-		graph.GetFirstList()->Begin(RendererBase::Get().commandAllocators[RendererBase::GetCurrentFrameIndex()]);
-		irSkybox.SwitchToShaderUsageMode(graph.GetFirstList().Raw());
-		pfSkybox.SwitchToShaderUsageMode(graph.GetFirstList().Raw());
-		graph.GetFirstList()->End();
 		RendererBase::GetDirectQueue()->ExecuteCommandLists(&graph.GetFirstList()->ID, 1);
 		//graph.Execute();
 		//graph.SubmitToQueue();
@@ -817,7 +809,7 @@ namespace Pistachio {
 		regularLights.clear();
 		numShadowDirLights = 0;
 		numRegularDirLights = 0;
-		auto transform_parent_view = m_Registry.view<TransformComponent, HierarchyComponent>();
+		//auto transform_parent_view = m_Registry.view<TransformComponent, HierarchyComponent>();
 		UpdateTransforms(root, Matrix4::Identity);
 		FrustumCull(camera.GetViewMatrix(), camera.GetProjection(),Math::ToRadians(camera.GetFOVdeg()),camera.GetNearClip(), camera.GetFarClip(), camera.GetAspectRatio());
 		UpdateObjectCBs();
@@ -1055,7 +1047,6 @@ namespace Pistachio {
 	template<>
 	void PISTACHIO_API Scene::OnComponentAdded<MeshRendererComponent>(Entity entity, MeshRendererComponent& component)
 	{
-		const auto& transform = m_Registry.get<TransformComponent>(entity);
 		TransformData td;
 		td.transform = Matrix4::Identity;
 		td.normal = Matrix4::Identity;

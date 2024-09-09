@@ -84,6 +84,7 @@ namespace Pistachio {
 		static SamplerHandle GetDefaultSampler();
 		static SamplerHandle GetShadowSampler();
 		static Texture2D& GetBrdfTexture();
+		static CubeMap& GetDefaultCubeMap();
 		static const RHI::Ptr<RHI::DynamicDescriptor> GetCBDesc();
 		static const RHI::Ptr<RHI::DynamicDescriptor> GetCBDescPS();
 		static uint32_t GetCounterValue();

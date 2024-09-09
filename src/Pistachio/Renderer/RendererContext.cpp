@@ -10,8 +10,6 @@
 #include "Pistachio/Renderer/ShaderAsset.h"
 #include "Pistachio/Utils/RendererUtils.h"
 #include "RootSignature.h"
-#include "ShaderReflect.h"
-#include <initializer_list>
 #include <optional>
 static const uint32_t VB_INITIAL_SIZE = 1024;
 static const uint32_t IB_INITIAL_SIZE = 1024;
@@ -291,7 +289,13 @@ namespace Pistachio
 		barr.AccessFlagsBefore = RHI::ResourceAcessFlags::SHADER_WRITE;
 		barr.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
 		RendererBase::GetMainCommandList()->PipelineBarrier(RHI::PipelineStage::COMPUTE_SHADER_BIT, RHI::PipelineStage::FRAGMENT_SHADER_BIT, {}, {&barr,1});
-		//Replace with mesh generation engine
-		
+
+		auto err = defaultCubemap.Initialize(1, 1, RHI::Format::R8G8B8A8_UNORM);
+		if(!err.Successful())
+		{
+			PT_CORE_ERROR("Could not create default cubemap: ");
+			Error::LogErrorToConsole(err);
+			PT_DEBUG_BREAK;
+		}
     }
 }

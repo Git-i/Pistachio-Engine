@@ -36,7 +36,7 @@ namespace Pistachio
     void RenderGraph::SubmitToQueue()
     {
         bool computeLast = true;
-        uint32_t maxFenceDiff = 0;
+        //uint32_t maxFenceDiff = 0;
         uint32_t gfxIndex = 0;
         uint32_t cmpIndex = 0;
         //if(levelTransitionIndices.size()) RendererBase::GetDirectQueue()->WaitForFence(fence, passesSortedAndFence[0].second + maxFence);
@@ -153,7 +153,7 @@ namespace Pistachio
         else
         {
             maxFence += passesSortedAndFence[passesSortedAndFence.size() - 1].second + 1;
-            RESULT res = RendererBase::GetDirectQueue()->SignalFence(fence, maxFence);
+            RendererBase::GetDirectQueue()->SignalFence(fence, maxFence);
         }
         //auto res = RendererBase::device->QueueWaitIdle(RendererBase::GetDirectQueue());
         //if (res) {
@@ -305,6 +305,7 @@ namespace Pistachio
             case Read: return RHI::LoadOp::Load;
             case Write: return RHI::LoadOp::Clear;
             case ReadWrite: return RHI::LoadOp::Load;
+            default: return RHI::LoadOp::DontCare;
         }
     }
     RHI::ResourceLayout InputLayout(AttachmentUsage usage)
@@ -579,7 +580,6 @@ namespace Pistachio
     void RenderGraph::LogAttachmentBody(const AttachmentInfo& att, std::vector<RGTexture>& textures)
     {
         auto& texture = textures[att.texture.texOffset];
-        RHI::Weak rhi_tex = texture.texture;
         PT_CORE_VERBOSE("  Texture -> instance: {0}, layout: {1}, access: {2}, family: {3}, name: {4}",
             att.texture.instID,
             ENUM_FMT(texture.current_layout),
@@ -764,10 +764,12 @@ namespace Pistachio
                             {
                                 fenceVal = std::max(fenceVal, std::get<2>(output) + diffFamily);
                                 if (diffFamily)
+                                {
                                     if (std::get<1>(output) == PassType::Graphics)
                                         ((RenderPass*)std::get<3>(output))->signal = true;
                                     else
                                         ((ComputePass*)std::get<3>(output))->signal = true;
+                                }
                             }
                             return found;
                         });
@@ -789,10 +791,12 @@ namespace Pistachio
                             {
                                 fenceVal = std::max(fenceVal, std::get<2>(output) + diffFamily);
                                 if (diffFamily)
+                                {
                                     if (std::get<1>(output) == PassType::Graphics)
                                         ((RenderPass*)std::get<3>(output))->signal = true;
                                     else
                                         ((ComputePass*)std::get<3>(output))->signal = true;
+                                }
                             }
                             return found;
                         });
@@ -838,10 +842,12 @@ namespace Pistachio
                             {
                                 fenceVal = std::max(fenceVal, std::get<2>(output) + diffFamily);
                                 if (diffFamily)
+                                {
                                     if (std::get<1>(output) == PassType::Graphics)
                                         ((RenderPass*)std::get<3>(output))->signal = true;
                                     else
                                         ((ComputePass*)std::get<3>(output))->signal = true;
+                                }
                             }
                             return found;
                         });
@@ -863,10 +869,12 @@ namespace Pistachio
                             {
                                 fenceVal = std::max(fenceVal, std::get<2>(output) + diffFamily);
                                 if (diffFamily)
+                                {
                                     if (std::get<1>(output) == PassType::Graphics)
                                         ((RenderPass*)std::get<3>(output))->signal = true;
                                     else
                                         ((ComputePass*)std::get<3>(output))->signal = true;
+                                }
                             }
                             return found;
                         });

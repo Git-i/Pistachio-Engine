@@ -266,4 +266,8 @@ namespace Pistachio {
 	{
 		return Self().ctx.BrdfTex;
 	}
+	CubeMap& Renderer::GetDefaultCubeMap()
+	{
+		return Self().ctx.defaultCubemap;
+	}
 }

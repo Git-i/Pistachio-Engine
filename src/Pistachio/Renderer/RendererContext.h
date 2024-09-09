@@ -10,6 +10,7 @@ Holds data for the Renderer
 #include "Core/Device.h"
 #include "Pistachio/Renderer/Buffer.h"
 #include "Pistachio/Renderer/BufferHandles.h"
+#include "Pistachio/Renderer/Cubemap.h"
 #include "Pistachio/Renderer/RendererBase.h"
 #include "Pistachio/Renderer/Shader.h"
 #include "Pistachio/Renderer/Texture.h"
@@ -84,6 +85,7 @@ namespace Pistachio
 		uint32_t     numDirtyCBFrames;
 		FrameResource resources[RendererBase::numFramesInFlight];
 		Texture2D BrdfTex;
+		CubeMap defaultCubemap;
 
 		SamplerHandle defaultSampler;
 		SamplerHandle brdfSampler;
