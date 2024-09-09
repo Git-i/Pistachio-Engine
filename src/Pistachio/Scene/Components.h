@@ -74,6 +74,17 @@ namespace Pistachio{
 			Model = GetAssetManager()->CreateModelAsset(path).value_or(Asset{}); 
 		}
 	};
+	/**
+	 * @brief Environment configuration component, only to be used in the  root node
+	 * 
+	 */
+	struct PISTACHIO_API EnvironmentComponent {
+		Asset skybox;
+		enum class Type {
+			SkyboxTexture
+		};
+		Type type;
+	};
 	// ----------------------------------------------------------------------------------------------------------------------
 	struct PISTACHIO_API SpriteRendererComponent {
 		DirectX::XMFLOAT4 Color = {1.f,1.f,1.f, 1.f}; 

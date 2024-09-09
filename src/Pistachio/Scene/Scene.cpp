@@ -134,8 +134,8 @@ namespace Pistachio {
 		shadowMarker.CreateStack(nullptr, sizeof(uint32_t));
 		shadowMapAtlas.CreateStack(4096, 4096,1, RHI::Format::D32_FLOAT PT_DEBUG_REGION(, "Scene -> Shadow Map"));
 		computeShaderMiscBuffer.CreateStack(nullptr, sizeof(uint32_t) * 2, SBCreateFlags::None);
-		irSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM PT_DEBUG_REGION(, "Scene -> irSkybox"));
-		pfSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM PT_DEBUG_REGION(, "Scene -> pfSkybox"));
+		irSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM, "Scene -> irSkybox");
+		pfSkybox.CreateStack(1, 1, 1, RHI::Format::R8G8B8A8_UNORM, "Scene -> pfSkybox");
 		
 		ComputeShader* shd_buildClusters = Renderer::GetBuiltinComputeShader("Build Clusters");
 		ComputeShader* shd_activeClusters = Renderer::GetBuiltinComputeShader("Filter Clusters");

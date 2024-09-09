@@ -5,25 +5,17 @@ namespace Pistachio
 {
     Result<Skybox*> Skybox::Create(std::string_view path)
     {
-        auto ret = new Skybox;
+        auto ret = std::make_unique<Skybox>();
         auto err = ret->Initialize(path);
-        if(!err.Successful())
-        {
-            delete ret;
-            return ezr::err(std::move(err));
-        }
-        return ret;
+        if(!err.Successful()) return ezr::err(std::move(err));
+        return ret.release();
     }
     Result<Skybox*> Skybox::Create(const void* memory, size_t size)
     {
-        auto ret = new Skybox;
+        auto ret = std::make_unique<Skybox>();
         auto err = ret->Initialize(memory, size);
-        if(!err.Successful())
-        {
-            delete ret;
-            return ezr::err(std::move(err));
-        }
-        return ret;
+        if(!err.Successful()) return ezr::err(std::move(err));
+        return ret.release();
     }
     /*
         pSkb Specification (all numbers are little endian)

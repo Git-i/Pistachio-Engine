@@ -14,6 +14,7 @@ namespace Pistachio
 		Result<Asset> CreateTexture2DAsset(const std::string& filename);
 		Result<Asset> CreateModelAsset(const std::string& filename);
 		Result<Asset> CreateShaderAsset(const std::string& filename);
+		Result<Asset> CreateSkyboxAsset(const std::string& filename);
 		std::optional<Asset> GetAsset(const std::string& resource_name);
 		std::string GetAssetFileName(const Asset& asset);
 		void ReportLiveObjects();

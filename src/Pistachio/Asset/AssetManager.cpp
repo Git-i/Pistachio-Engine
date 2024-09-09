@@ -4,6 +4,7 @@
 #include "Pistachio/Renderer/Texture.h"
 #include "ptpch.h"
 #include "Pistachio/Renderer/Material.h"
+#include "Pistachio/Renderer/Skybox.h"
 #include <cstdint>
 #include <optional>
 #include <type_traits>
@@ -119,6 +120,10 @@ namespace Pistachio
 	{
 		return CreateAsset(filename, ResourceType::Texture);
 	}
+	Result<Asset> AssetManager::CreateSkyboxAsset(const std::string& filename)
+	{
+		return CreateAsset(filename, ResourceType::Skybox);
+	}
 	Result<Asset> AssetManager::CreateModelAsset(const std::string& filename)
 	{
 		return CreateAsset(filename, ResourceType::Model);
@@ -197,6 +202,7 @@ namespace Pistachio
 			else if (type == ResourceType::Material) obj = Material::Create(filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Shader) obj = ShaderAsset::Create(filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Model) obj = Model::Create(filename.c_str()).transform(result_to_ref_obj);
+			else if (type == ResourceType::Skybox) obj = Skybox::Create(filename.c_str()).transform(result_to_ref_obj);
 			else obj = ezr::err(Error(ErrorType::InvalidResourceType, PT_PRETTY_FUNCTION));
 
 			if(!obj) return ezr::err(std::move(obj).err());

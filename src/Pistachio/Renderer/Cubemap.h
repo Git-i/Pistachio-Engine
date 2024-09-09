@@ -8,9 +8,10 @@ namespace Pistachio
     {
     public:
         [[nodiscard]] static Result<CubeMap*> Create(std::string_view path);
-        [[nodiscard]] static Result<CubeMap*> Create(const pktx::Texture& texture);
+        [[nodiscard]] static Result<CubeMap*> Create(pktx::Texture& texture);
+        [[nodiscard]] static Result<CubeMap*> Create(uint32_t width, uint32_t height, RHI::Format format);
         [[nodiscard]] Error Initialize(std::string_view path);
-        [[nodiscard]] Error Initialize(const pktx::Texture& texture);
+        [[nodiscard]] Error Initialize(pktx::Texture& texture);
     private:
         uint32_t width, height;
         RHI::Ptr<RHI::Texture> ID;

@@ -6,6 +6,7 @@ namespace Pistachio
 	{
 		Invalid,
 		Texture,
+		Skybox,
 		Model,
 		Material,
 		Animation,
