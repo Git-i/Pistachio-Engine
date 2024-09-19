@@ -99,7 +99,6 @@ namespace Pistachio
 	{
 		RendererBase::Get().mainFence->Wait(RendererBase::Get().fence_vals[(RendererBase::GetCurrentFrameIndex() + 2) % 3]);
 		auto sDesc = MakeDesc(surface, width, height);
-		swapchain->Release();
 		swapchain = nullptr;
 		swapchain = RendererBase::GetInstance()->CreateSwapChain(sDesc, RendererBase::GetPhysicalDevice(), RendererBase::GetDevice(), RendererBase::GetDirectQueue()).value();
 		uint32_t index = 0;

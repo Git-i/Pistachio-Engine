@@ -118,8 +118,8 @@ namespace Pistachio {
 	{
 		PT_PROFILE_FUNCTION();
 		PT_CORE_ASSERT((options.custom_instance && options.custom_device) || (!options.custom_instance && !options.custom_device));
-		if(options.custom_instance) instance = RHI::Instance::FromNativeHandle(options.custom_instance);
-		else RHICreateInstance(&instance);
+		if(options.custom_instance) instance = RHI::Instance::FromNativeHandle(options.custom_instance).value();
+		else instance = RHI::Instance::Create().value();
 		instance->SetLoggerCallback([](RHI::LogLevel l, std::string_view str)
 		{
 			using enum RHI::LogLevel;
@@ -252,7 +252,7 @@ namespace Pistachio {
 		return base.instance->GetInstanceAPI();
 	}
 
-	RHI::Instance* RendererBase::GetInstance()
+	RHI::Ptr<RHI::Instance> RendererBase::GetInstance()
 	{
 		auto& base = Application::Get().GetRendererBase();
 		return base.instance;
@@ -329,7 +329,8 @@ namespace Pistachio {
 
 	void RendererBase::FlushStagingBuffer()
 	{
-		auto& base = Application::Get().GetRendererBase();
+		auto& base = Get();
+		if(!base.outstandingResourceUpdate) return;
 		static uint64_t stagingFenceVal = 0;
 		stagingFenceVal++;
 		base.stagingCommandList->End();
@@ -562,5 +563,9 @@ namespace Pistachio {
 	RendererBase& Get()
 	{
 		return Application::Get().GetRendererBase();
+	}
+	RHI::Ptr<RHI::GraphicsCommandList> RendererBase::GetStagingCommandList()
+	{
+		return Get().stagingCommandList;
 	}
 }

@@ -1,5 +1,6 @@
 #include "Cubemap.h"
 #include "Pistachio/Renderer/RendererBase.h"
+#include <ranges>
 namespace Pistachio
 {
     Result<CubeMap*> CubeMap::Create(std::string_view filepath)
@@ -30,12 +31,28 @@ namespace Pistachio
     }
     ktx_transcode_fmt_e GetOptimalTranscodeFormat()
     {
-        //todo
+        constexpr std::array preferred_transcode_formats = {
+            RHI::Format::BC7_UNORM, //todo add more formats
+        };
+        auto to_ktx_transcode_fmt = [](RHI::Format format)
+        {
+            switch (format)
+            {
+            case RHI::Format::BC7_UNORM: return KTX_TTF_BC7_RGBA;
+            default: return KTX_TTF_NOSELECTION;
+            }
+        };
+        for(const auto format : preferred_transcode_formats)
+        {
+            const auto support = RendererBase::GetPhysicalDevice()->GetFormatSupportInfo(format, RHI::TextureTilingMode::Optimal);
+            if((support & RHI::FormatSupport::SampledImage) != RHI::FormatSupport::None) return to_ktx_transcode_fmt(format);
+        }
         return KTX_TTF_BC7_RGBA;
     }
     Error CubeMap::Initialize(pktx::Texture& texture)
     {
-        if(!texture.IsCubemap()) return Error(ErrorType::InvalidFile, "Texture passed in is not a cubemap");
+        if (!texture.IsCubemap()) return {ErrorType::InvalidFile, "Texture passed in is not a cube map"};
+
         RHI::TextureType type;
         if(texture.NumDimensions() == 1) type = RHI::TextureType::Texture1D;
         else if(texture.NumDimensions() == 2) type = RHI::TextureType::Texture2D;
@@ -58,7 +75,8 @@ namespace Pistachio
             .optimizedClearValue = nullptr,
             .usage = RHI::TextureUsage::CopyDst | RHI::TextureUsage::SampledImage | RHI::TextureUsage::CubeMap
         };
-        RHI::AutomaticAllocationInfo alloc_info;
+
+        RHI::AutomaticAllocationInfo alloc_info{};
         alloc_info.access_mode = RHI::AutomaticAllocationCPUAccessMode::None;
         RHI::Ptr<RHI::Texture> tex;
         RHI::Ptr<RHI::TextureView> tex_view;
@@ -83,9 +101,56 @@ namespace Pistachio
         }).handle([&tex_view](auto&& view) {tex_view = view; return Error(ErrorType::Success);},
             [](auto&& err){return Error::FromRHIError(err);});
         if(!err.Successful()) return err;
+        
+        RHI::TextureMemoryBarrier barr{
+            .AccessFlagsBefore = RHI::ResourceAcessFlags::NONE,
+            .AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_WRITE,
+            .oldLayout = RHI::ResourceLayout::UNDEFINED,
+            .newLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL,
+            .texture = ID,
+            .previousQueue = RHI::QueueFamily::Ignored,
+            .nextQueue = RHI::QueueFamily::Ignored,
+            .subresourceRange{
+                .imageAspect = RHI::Aspect::COLOR_BIT,
+                .IndexOrFirstMipLevel = 0,
+                .NumMipLevels = td.mipLevels,
+                .FirstArraySlice = 0,
+                .NumArraySlices = td.depthOrArraySize
+            }
+        };
+        RendererBase::GetStagingCommandList()->PipelineBarrier(RHI::PipelineStage::TOP_OF_PIPE_BIT, RHI::PipelineStage::TRANSFER_BIT, {}, {&barr,1});
+        for(auto mip : std::views::iota(0u, texture.NumLevels()))
+        {
+            for(auto layer: std::views::iota(0u, texture.NumLayers()))
+            {
+                for(auto face : std::views::iota(0u, texture.NumFaces()))
+                {
+                    auto slice = layer * texture.NumFaces() + face;
+                    RHI::SubResourceRange range{
+                        .imageAspect = RHI::Aspect::COLOR_BIT,
+                        .IndexOrFirstMipLevel = mip,
+                        .NumMipLevels = 1,
+                        .FirstArraySlice = slice,
+                        .NumArraySlices = 1
+                    };
+                    RendererBase::PushTextureUpdate(tex, texture.ImageSize(mip), texture.Data(mip, layer, face).value(), &range, {
+                        static_cast<uint32_t>(texture.BaseWidth()/std::pow(2, mip)),
+                        static_cast<uint32_t>(texture.BaseHeight()/std::pow(2, mip)),
+                        1
+                    }, {0,0,0}, td.format);
+                }
+            }
+        }
+
+        barr.AccessFlagsBefore = RHI::ResourceAcessFlags::NONE;
+        barr.AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_WRITE;
+        barr.oldLayout = RHI::ResourceLayout::UNDEFINED;
+        barr.newLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL;
+        RendererBase::GetStagingCommandList()->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::FRAGMENT_SHADER_BIT, {}, {&barr,1});
+
         ID = tex;
         view = tex_view;
-        return Error(ErrorType::Success);
+        return {ErrorType::Success};
     }
     Error CubeMap::Initialize(uint32_t width, uint32_t height, RHI::Format format)
     {
@@ -127,6 +192,23 @@ namespace Pistachio
         if(!err.Successful()) return err;
         ID = tex;
         view = tex_view;
+        RHI::TextureMemoryBarrier barr{
+            .AccessFlagsBefore = RHI::ResourceAcessFlags::NONE,
+            .AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ,
+            .oldLayout = RHI::ResourceLayout::UNDEFINED,
+            .newLayout = RHI::ResourceLayout::SHADER_READ_ONLY_OPTIMAL,
+            .texture = ID,
+            .previousQueue = RHI::QueueFamily::Ignored,
+            .nextQueue = RHI::QueueFamily::Ignored,
+            .subresourceRange{
+                .imageAspect = RHI::Aspect::COLOR_BIT,
+                .IndexOrFirstMipLevel = 0,
+                .NumMipLevels = 1,
+                .FirstArraySlice = 0,
+                .NumArraySlices = 6
+            }
+        };
+        RendererBase::GetStagingCommandList()->PipelineBarrier(RHI::PipelineStage::TOP_OF_PIPE_BIT, RHI::PipelineStage::FRAGMENT_SHADER_BIT, {}, {&barr,1});
         return Error(ErrorType::Success);
     }
 }

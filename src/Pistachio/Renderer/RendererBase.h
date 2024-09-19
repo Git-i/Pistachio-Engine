@@ -78,8 +78,10 @@ namespace Pistachio {
 		static void DrawIndexed(uint32_t indexCount);
 		bool Init(InitOptions& options);
 		static RHI::Ptr<RHI::Device> GetDevice();
-		static RHI::Instance* GetInstance();
+		static RHI::Ptr<RHI::Instance> GetInstance();
 		static RHI::Ptr<RHI::GraphicsCommandList> GetMainCommandList();
+		//To be used when creating new stuff to transition to optimal layout
+		static RHI::Ptr<RHI::GraphicsCommandList> GetStagingCommandList();
 		static RHI::Ptr<RHI::DescriptorHeap> GetMainDescriptorHeap();
 		static RHI::Ptr<RHI::Texture> GetBackBufferTexture(uint32_t index);
 		static RHI::PhysicalDevice* GetPhysicalDevice();
@@ -108,7 +110,7 @@ namespace Pistachio {
 		RHI::Ptr<RHI::CommandAllocator> stagingCommandAllocator;
 		RHI::Ptr<RHI::CommandAllocator> commandAllocators[3];
 		RHI::Ptr<RHI::CommandAllocator> computeCommandAllocators[3];
-		RHI::Instance* instance;
+		RHI::Ptr<RHI::Instance> instance;
 		RHI::PhysicalDevice* physicalDevice;
 		RHI::Ptr<RHI::CommandQueue> directQueue;
 		RHI::Ptr<RHI::CommandQueue> computeQueue;

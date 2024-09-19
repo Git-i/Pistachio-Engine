@@ -321,6 +321,7 @@ namespace Pistachio {
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
 							Model* model = assetMan->GetModelResource(meshc.Model);
+							if(!model) continue;
 							Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 							for(uint32_t i = 0; i < 4; i++)
@@ -576,7 +577,7 @@ namespace Pistachio {
 			};
 		}
 		graph.Compile();
-		RendererBase::GetDirectQueue()->ExecuteCommandLists(&graph.GetFirstList()->ID, 1);
+
 		//graph.Execute();
 		//graph.SubmitToQueue();
 	}

@@ -13,23 +13,7 @@
 #include <ranges>
 #include <string_view>
 #include <variant>
-#define VERTEX_SHADER(ID) ((ID3D11VertexShader*)ID.Get())
-#define VERTEX_SHADER_PP(ID) ((ID3D11VertexShader**)ID.GetAddressOf())
 
-#define PIXEL_SHADER(ID) ((ID3D11PixelShader*)ID.Get())
-#define PIXEL_SHADER_PP(ID) ((ID3D11PixelShader**)ID.GetAddressOf())
-
-#define GEOMETRY_SHADER(ID) ((ID3D11GeometryShader*)ID.Get())
-#define GEOMETRY_SHADER_PP(ID) ((ID3D11GeometryShader**)ID.GetAddressOf())
-
-#define BLOB(ID) ((ID3D10Blob*)ID.Get())
-#define BLOB_PP(ID) ((ID3D10Blob**)ID.GetAddressOf())
-
-#define INPUT_LAYOUT(ID) ((ID3D11InputLayout*)ID.Get())
-#define INPUT_LAYOUT_PP(ID) ((ID3D11InputLayout**)ID.GetAddressOf())
-
-#define BUFFER(ID) ((ID3D11Buffer*)ID.Get())
-#define BUFFER_PP(ID) ((ID3D11Buffer**)ID.GetAddressOf())
 
 namespace Pistachio {
 
@@ -52,9 +36,10 @@ namespace Pistachio {
 		mode.StencilWriteMask = stencilWriteMask;
 		return mode;
 	}
+
 	static void EncodePso(PSOHash& resultBuffer, RHI::PipelineStateObjectDesc* desc)
 	{
-		//we dont zero state if its disabled so the user can safely enable it with the past config
+		//we don't zero state if its disabled so the user can safely enable it with the past config
 		//we instead zero disabled state if we want to compare two PSOHash structures
 		memset(&resultBuffer, 0, sizeof(PSOHash));
 		resultBuffer.AntialiasedLineEnable = desc->rasterizerMode.AntialiasedLineEnable ? 1 : 0;
@@ -290,7 +275,7 @@ namespace Pistachio {
 			//pso exists
 			PT_CORE_INFO("Matching PSO found, setting DS mode");
 			currentPSO = newHash;
-			// todo bind the new PSO ? what is this is not the bound shader?
+			// todo bind the new PSO ? what if this is not the bound shader?
 			return 0;
 		}
 		else
@@ -434,23 +419,23 @@ namespace Pistachio {
 
 	void Shader::FillSetInfo(RHI::RootSignatureDesc& dsc)
 	{
-		for(auto i : std::views::iota(dsc.rootParameters, dsc.rootParameters + dsc.numRootParameters))
+		for(const auto& i : dsc.rootParameters)
 		{
-			if(i->type == RHI::RootParameterType::DescriptorTable)
+			if(i.type == RHI::RootParameterType::DescriptorTable)
 			{
 				auto& s = m_infos.sets.emplace_back();
-				s.setIndex = i->descriptorTable.setIndex;
+				s.setIndex = i.descriptorTable.setIndex;
 				s.set = nullptr;
-				s.count.reserve(i->descriptorTable.numDescriptorRanges);
-				s.slot.reserve(i->descriptorTable.numDescriptorRanges);
-				s.stage.reserve(i->descriptorTable.numDescriptorRanges);
-				s.type.reserve(i->descriptorTable.numDescriptorRanges);
-				for(auto j : std::views::iota(i->descriptorTable.ranges, i->descriptorTable.ranges + i->descriptorTable.numDescriptorRanges))
+				s.count.reserve(i.descriptorTable.ranges.size());
+				s.slot.reserve(i.descriptorTable.ranges.size());
+				s.stage.reserve(i.descriptorTable.ranges.size());
+				s.type.reserve(i.descriptorTable.ranges.size());
+				for(const auto& j : i.descriptorTable.ranges)
 				{
-					s.count.push_back(j->numDescriptors);
-					s.slot.push_back(j->BaseShaderRegister);
-					s.stage.push_back(j->stage);
-					s.type.push_back(j->type);
+					s.count.push_back(j.numDescriptors);
+					s.slot.push_back(j.BaseShaderRegister);
+					s.stage.push_back(j.stage);
+					s.type.push_back(j.type);
 				}
 			}
 		}
@@ -487,9 +472,9 @@ namespace Pistachio {
 				reflections.push_back(RHI::ShaderReflection::CreateFromMemory(DS.data).value());
 		}
 		auto[rsd,_1,_2] = RHI::ShaderReflection::FillRootSignatureDesc(reflections, dynamic_sets, push_block);
-		layouts.resize(rsd.numRootParameters);
+		layouts.resize(rsd.rootParameters.size());
 		FillSetInfo(rsd);
-		rootSig = RendererBase::GetDevice()->CreateRootSignature(&rsd, layouts.data()).value();
+		rootSig = RendererBase::GetDevice()->CreateRootSignature(rsd, layouts.data()).value();
 	}
 
 
@@ -500,52 +485,63 @@ namespace Pistachio {
 		info.buffer = buff;
 		info.offset = offset;
 		info.range = size;
-		RHI::DescriptorSetUpdateDesc updateDesc;
-		updateDesc.arrayIndex = 0;
-		updateDesc.binding = slot;
-		updateDesc.numDescriptors = 1;
-		updateDesc.type = type;
-		updateDesc.bufferInfos = &info;
-		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		std::array updateDesc {
+			RHI::DescriptorSetUpdateDesc{
+				.binding = slot,
+				.arrayIndex = 0,
+				.numDescriptors = 1,
+				.type = type,
+				.bufferInfos = &info,
+			}
+		};
+		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
 
 	void SetInfo::UpdateBufferBinding(const BufferBindingUpdateDesc& desc, uint32_t slot)
 	{
-		RHI::DescriptorBufferInfo info;
-		info.buffer = desc.buffer;
-		info.offset = desc.offset;
-		info.range = desc.size;
-		RHI::DescriptorSetUpdateDesc updateDesc;
-		updateDesc.arrayIndex = 0;
-		updateDesc.binding = slot;
-		updateDesc.numDescriptors = 1;
-		updateDesc.type = desc.type;
-		updateDesc.bufferInfos = &info;
-		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RHI::DescriptorBufferInfo info{
+			.buffer = desc.buffer,
+			.offset = desc.offset,
+			.range = desc.size,
+		};
+		std::array updateDesc{
+			RHI::DescriptorSetUpdateDesc{
+				.binding = slot,
+				.arrayIndex = 0,
+				.numDescriptors = 1,
+				.type = desc.type,
+				.bufferInfos = &info,
+			}
+		};
+		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
 	void SetInfo::UpdateTextureBinding(RHI::Weak<RHI::TextureView> desc, uint32_t slot, RHI::DescriptorType type)
 	{
-		RHI::DescriptorTextureInfo info;
-		info.texture = desc;
-		RHI::DescriptorSetUpdateDesc updateDesc;
-		updateDesc.arrayIndex = 0;
-		updateDesc.binding = slot;
-		updateDesc.numDescriptors = 1;
-		updateDesc.type = type;
-		updateDesc.textureInfos = &info;
-		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RHI::DescriptorTextureInfo info{.texture = desc};
+		std::array updateDesc{
+			RHI::DescriptorSetUpdateDesc{
+				.binding = slot,
+				.arrayIndex = 0,
+				.numDescriptors = 1,
+				.type = type,
+				.textureInfos = &info,
+			}
+		};
+		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
 	void SetInfo::UpdateSamplerBinding(SamplerHandle handle, uint32_t slot)
 	{
-		RHI::DescriptorSamplerInfo info;
-		info.heapHandle = RendererBase::GetCPUHandle(handle);
-		RHI::DescriptorSetUpdateDesc updateDesc;
-		updateDesc.arrayIndex = 0;
-		updateDesc.binding = slot;
-		updateDesc.numDescriptors = 1;
-		updateDesc.type = RHI::DescriptorType::Sampler;
-		updateDesc.samplerInfos = &info;
-		RendererBase::GetDevice()->UpdateDescriptorSet(1, &updateDesc, set);
+		RHI::DescriptorSamplerInfo info{.heapHandle = RendererBase::GetCPUHandle(handle)};
+		std::array updateDesc{
+			RHI::DescriptorSetUpdateDesc{
+				.binding = slot,
+				.arrayIndex = 0,
+				.numDescriptors = 1,
+				.type = RHI::DescriptorType::Sampler,
+				.samplerInfos = &info,
+			}
+		};
+		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
 
 	bool PSOHash::operator==(const PSOHash& hash) const
@@ -613,8 +609,8 @@ namespace Pistachio {
 		if (mode == RHI::ShaderMode::File) CSReflection[0] = RHI::ShaderReflection::CreateFromFile(code.data).value();
 		else CSReflection[0] = RHI::ShaderReflection::CreateFromMemory(code.data).value();
 		auto[rsd, _1, _2] = RHI::ShaderReflection::FillRootSignatureDesc(CSReflection, {}, std::nullopt);
-		layouts.resize(rsd.numRootParameters);
-		rSig = RendererBase::GetDevice()->CreateRootSignature(&rsd, layouts.data()).value();
+		layouts.resize(rsd.rootParameters.size());
+		rSig = RendererBase::GetDevice()->CreateRootSignature(rsd, layouts.data()).value();
 		CreateSetInfos(CSReflection[0]);
 	}
 
@@ -694,10 +690,9 @@ void Pistachio::Helpers::FillRaseterizerMode(RHI::RasterizerMode& mode, RHI::Fil
 	mode.topology = topology;
 }
 
-void Pistachio::Helpers::FillDescriptorSetRootParam(RHI::RootParameterDesc* rpDesc, uint32_t numRanges, uint32_t setIndex, RHI::DescriptorRange* ranges)
+void Pistachio::Helpers::FillDescriptorSetRootParam(RHI::RootParameterDesc* rpDesc, uint32_t setIndex, std::span<RHI::DescriptorRange> ranges)
 {
 	rpDesc->type = RHI::RootParameterType::DescriptorTable;
-	rpDesc->descriptorTable.numDescriptorRanges = numRanges;
 	rpDesc->descriptorTable.ranges = ranges;
 	rpDesc->descriptorTable.setIndex = setIndex;
 }

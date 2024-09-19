@@ -295,7 +295,7 @@ namespace Pistachio {
 			float depthBiasClamp = 0,
 			float ssDepthBias = 0,
 			bool depthClip = false);
-		void FillDescriptorSetRootParam(RHI::RootParameterDesc* rpDesc, uint32_t numRanges, uint32_t setIndex, RHI::DescriptorRange* ranges);
+		void FillDescriptorSetRootParam(RHI::RootParameterDesc* rpDesc, uint32_t numRanges, std::span<RHI::DescriptorRange> ranges);
 		void FillDynamicDescriptorRootParam(RHI::RootParameterDesc* rpDesc, uint32_t setIndex, RHI::DescriptorType type, RHI::ShaderStage stage);
 		void FillDescriptorRange(RHI::DescriptorRange* range, uint32_t numDescriptors, uint32_t shaderRegister, RHI::ShaderStage stage, RHI::DescriptorType type);
 

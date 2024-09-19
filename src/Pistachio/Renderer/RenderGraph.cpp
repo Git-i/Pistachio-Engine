@@ -35,6 +35,7 @@ namespace Pistachio
     }
     void RenderGraph::SubmitToQueue()
     {
+        RendererBase::FlushStagingBuffer();
         bool computeLast = true;
         //uint32_t maxFenceDiff = 0;
         uint32_t gfxIndex = 0;
