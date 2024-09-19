@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <cstdint>
 #include "Scene.h"
-#include "Scene.h"
 #include "Components.h"
 #include "Pistachio/Renderer/Renderer2D.h"
 
@@ -284,7 +283,7 @@ namespace Pistachio {
 				{
 					RHI::RenderingAttachmentDesc attachDesc{};
 					attachDesc.clearColor = { 1,1,1,1 };
-					attachDesc.ImageView = RendererBase::GetCPUHandle(shadowMapAtlas.DSView);
+					attachDesc.ImageView = RendererBase::GetCPUHandle(shadowMapAtlas.DSView.Get());
 					attachDesc.loadOp = RHI::LoadOp::Clear;
 					attachDesc.storeOp = RHI::StoreOp::Store;
 					RHI::RenderingBeginDesc rbDesc{};
@@ -364,7 +363,7 @@ namespace Pistachio {
 				{
 					RHI::RenderingAttachmentDesc attachDesc{};
 					attachDesc.clearColor = { 1,1,1,1 };
-					attachDesc.ImageView = RendererBase::GetCPUHandle(shadowMapAtlas.DSView);
+					attachDesc.ImageView = RendererBase::GetCPUHandle(shadowMapAtlas.DSView.Get());
 					attachDesc.loadOp = RHI::LoadOp::Clear;
 					attachDesc.storeOp = RHI::StoreOp::Store;
 					RHI::RenderingBeginDesc rbDesc{};

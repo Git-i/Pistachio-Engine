@@ -69,21 +69,13 @@ namespace Pistachio
 	{
 	public:
 		RGTexture() = default;
-		RGTexture(const RGTexture&) = default;
-		RGTexture(RGTexture&&) = default;
-		RGTexture& operator=(const RGTexture&) = default;
-		void InvalidateRTVHandle()
+		RGTexture(RGTexture&& other) noexcept = default;
+		~RGTexture()
 		{
-			//todo invalidate should only destroy if the render graph created it, that is
-			//it is not from a pistachio render texture
-			if (rtvHandle.heapIndex != UINT32_MAX)
-				RendererBase::DestroyRenderTargetView(rtvHandle);
-			rtvHandle = { UINT32_MAX, UINT32_MAX };
+			if(!ownsRTV) rtvHandle = UniqueRTVHandle(RTVHandle::Invalid());
+			if(!ownsDSV) dsvHandle = UniqueDSVHandle(DSVHandle::Invalid());
 		}
-		//void SetResource(RHI::Texture* texture)
-		//{
-		//	this->texture = texture;
-		//}
+
 	private:
 		friend class RenderGraph;
 		friend class Renderer;
@@ -93,7 +85,7 @@ namespace Pistachio
 			RHI::ResourceLayout (*)(AttachmentUsage),
         	RHI::ResourceAcessFlags (*)(AttachmentUsage),
 			RHI::QueueFamily,RHI::PipelineStage,bool);
-		RGTexture(RHI::Ptr<RHI::Texture> _texture, RHI::ResourceLayout layout, RHI::QueueFamily family, uint32_t MipSlice, bool isArray, uint32_t Slice, uint32_t numSlices,uint32_t numMips, RHI::ResourceAcessFlags access) :
+		RGTexture(const RHI::Ptr<RHI::Texture>& _texture, RHI::ResourceLayout layout, RHI::QueueFamily family, uint32_t MipSlice, bool isArray, uint32_t Slice, uint32_t numSlices,uint32_t numMips, RHI::ResourceAcessFlags access) :
 			texture(_texture),
 			current_layout(layout),
 			currentAccess(access),
@@ -105,18 +97,20 @@ namespace Pistachio
 			currentFamily(family),
 			numInstances(1)
 		{}
-		
+
 		RHI::Ptr<RHI::Texture> texture;
 		RHI::ResourceLayout current_layout;
 		RHI::ResourceAcessFlags currentAccess;
 		uint32_t mipSlice;
 		uint32_t mipSliceCount;
 		bool IsArray;
+		bool ownsRTV = true;
+		bool ownsDSV = true;
 		uint32_t arraySlice;
 		uint32_t sliceCount;
 		RHI::QueueFamily currentFamily;
-		RTVHandle rtvHandle = { UINT32_MAX, UINT32_MAX };
-		DSVHandle dsvHandle = { UINT32_MAX, UINT32_MAX };//for output resources
+		UniqueRTVHandle rtvHandle;
+		UniqueDSVHandle dsvHandle;
 		uint32_t numInstances;
 		RHI::PipelineStage stage = RHI::PipelineStage::TOP_OF_PIPE_BIT;
 
@@ -219,7 +213,7 @@ namespace Pistachio
 		void AddBufferInput(BufferAttachmentInfo* buffer);
 		void AddBufferOutput(BufferAttachmentInfo* buffer);
 		void SetShader(ComputeShader* shader);
-		void SetShader(RHI::Ptr<RHI::ComputePipeline> pipeline);
+		void SetShader(const RHI::Ptr<RHI::ComputePipeline>& pipeline);
 		std::function<void(RHI::Weak<RHI::GraphicsCommandList> list)> pass_fn;
 	private:
 		friend class RenderGraph;
@@ -258,7 +252,7 @@ namespace Pistachio
 		RGTextureHandle CreateTexture(RenderCubeMap* texture, uint32_t cubeIndex, uint32_t numSlices = 1);
 		RGTextureInstance MakeUniqueInstance(RGTextureHandle texture);
 		RGBufferInstance MakeUniqueInstance(RGBufferHandle buffer);
-		RGBufferHandle CreateBuffer(RHI::Ptr<RHI::Buffer> buffer, uint32_t offset, uint32_t size, RHI::QueueFamily family = RHI::QueueFamily::Graphics);
+		RGBufferHandle CreateBuffer(const RHI::Ptr<RHI::Buffer>& buffer, uint32_t offset, uint32_t size, RHI::QueueFamily family = RHI::QueueFamily::Graphics);
 		RHI::Ptr<RHI::GraphicsCommandList> GetFirstList(); ///<-Only Valid after `Compile` is called
 		void Execute();
 	private:

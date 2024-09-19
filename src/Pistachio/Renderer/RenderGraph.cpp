@@ -180,22 +180,24 @@ namespace Pistachio
     }
     RGTextureHandle RenderGraph::CreateTexture(RenderTexture* texture)
     {
-        auto tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics, 0, false, 0,1,texture->m_mipLevels,RHI::ResourceAcessFlags::NONE));
-        tex.rtvHandle = texture->RTView;
-        return RGTextureHandle{ &textures, (uint32_t)(textures.size() - 1) };
+        auto& tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics, 0, false, 0,1,texture->m_mipLevels,RHI::ResourceAcessFlags::NONE));
+        tex.rtvHandle = UniqueRTVHandle({texture->RTView->heapIndex, texture->RTView->heapOffset});
+        tex.ownsRTV = false;
+        return RGTextureHandle{ &textures, static_cast<uint32_t>(textures.size() - 1) };
     }
     RGTextureHandle RenderGraph::CreateTexture(DepthTexture* texture)
     {
-        auto tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics,0, false, 0,1,texture->m_mipLevels,RHI::ResourceAcessFlags::NONE));
-        tex.dsvHandle = texture->DSView;
-        return RGTextureHandle{ &textures, (uint32_t)(textures.size() - 1)  };
+        auto& tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics,0, false, 0,1,texture->m_mipLevels,RHI::ResourceAcessFlags::NONE));
+        tex.dsvHandle = UniqueDSVHandle({texture->DSView->heapIndex, texture->DSView->heapOffset});
+        tex.ownsDSV = false;
+        return RGTextureHandle{ &textures, static_cast<uint32_t>(textures.size() - 1)  };
     }
     RGTextureHandle RenderGraph::CreateTexture(RenderCubeMap* texture, uint32_t cubeIndex, uint32_t numSlices)
     {
 
-        auto tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics, 0, true, cubeIndex, numSlices,texture->m_mipLevels, RHI::ResourceAcessFlags::NONE));
-        tex.rtvHandle = texture->RTViews[cubeIndex];
-        return RGTextureHandle{ &textures, (uint32_t)(textures.size() - 1) };
+        auto& tex = textures.emplace_back(RGTexture(texture->m_ID, RHI::ResourceLayout::UNDEFINED, RHI::QueueFamily::Graphics, 0, true, cubeIndex, numSlices,texture->m_mipLevels, RHI::ResourceAcessFlags::NONE));
+        tex.rtvHandle = UniqueRTVHandle({texture->RTViews[cubeIndex]->heapIndex, texture->RTViews[cubeIndex]->heapOffset});
+        return RGTextureHandle{ &textures, static_cast<uint32_t>(textures.size() - 1) };
     }
     RGTextureInstance RenderGraph::MakeUniqueInstance(RGTextureHandle texture)
     {
@@ -205,10 +207,10 @@ namespace Pistachio
     {
         return RGBufferInstance{ buffer.offset, buffers[buffer.offset].numInstances++ };
     }
-    RGBufferHandle RenderGraph::CreateBuffer(RHI::Ptr<RHI::Buffer> buffer, uint32_t offset, uint32_t size, RHI::QueueFamily family)
+    RGBufferHandle RenderGraph::CreateBuffer(const RHI::Ptr<RHI::Buffer>& buffer, uint32_t offset, uint32_t size, RHI::QueueFamily family)
     {
-        auto buff = buffers.emplace_back(RGBuffer(buffer, offset, size, family,RHI::ResourceAcessFlags::NONE));
-        return RGBufferHandle{ &buffers, (uint32_t)(buffers.size() - 1) };
+        auto& buff = buffers.emplace_back(RGBuffer(buffer, offset, size, family,RHI::ResourceAcessFlags::NONE));
+        return RGBufferHandle{ &buffers, static_cast<uint32_t>(buffers.size() - 1) };
     }
     RenderPass& RenderGraph::AddPass(RHI::PipelineStage stage, const char* name)
     {
@@ -227,13 +229,13 @@ namespace Pistachio
     }
     RGTextureHandle RenderGraph::CreateTexture(Pistachio::Texture* texture, uint32_t mipSlice, bool isArray , uint32_t arraySlice, uint32_t numSlices,uint32_t numMips, RHI::ResourceLayout layout, RHI::QueueFamily family)
     {
-        auto tex = textures.emplace_back(RGTexture(texture->m_ID, layout, family,mipSlice, isArray, arraySlice,numSlices,numMips,RHI::ResourceAcessFlags::NONE));
-        return RGTextureHandle{ &textures, (uint32_t)(textures.size() - 1) };
+        auto& tex = textures.emplace_back(RGTexture(texture->m_ID, layout, family,mipSlice, isArray, arraySlice,numSlices,numMips,RHI::ResourceAcessFlags::NONE));
+        return RGTextureHandle{ &textures, static_cast<uint32_t>(textures.size() - 1) };
     }
     RGTextureHandle RenderGraph::CreateTexture(RHI::Ptr<RHI::Texture> texture, uint32_t mipSlice, bool isArray, uint32_t arraySlice, uint32_t numSlices, uint32_t numMips, RHI::ResourceLayout layout, RHI::QueueFamily family)
     {
-        auto tex = textures.emplace_back(RGTexture(texture, layout,  family, mipSlice,isArray,arraySlice,numSlices,numMips,RHI::ResourceAcessFlags::NONE));
-        return RGTextureHandle{ &textures, (uint32_t)(textures.size() - 1)};
+        auto& tex = textures.emplace_back(RGTexture(texture, layout,  family, mipSlice,isArray,arraySlice,numSlices,numMips,RHI::ResourceAcessFlags::NONE));
+        return RGTextureHandle{ &textures, static_cast<uint32_t>(textures.size() - 1)};
     }
     void RenderPass::SetShader(Shader* shader)
     {
@@ -288,17 +290,17 @@ namespace Pistachio
         rsig->Hold();
         computePipeline->Hold();
     }
-    void ComputePass::SetShader(RHI::Ptr<RHI::ComputePipeline> pipeline)
+    void ComputePass::SetShader(const RHI::Ptr<RHI::ComputePipeline>& pipeline)
     {
         computePipeline = pipeline;
     }
     void RenderPass::SetDepthStencilOutput(AttachmentInfo* info) { dsOutput = *info; }
-    RHI::Aspect FormatAspect(RHI::Format format)
+    RHI::Aspect FormatAspect(const RHI::Format format)
     {
-        auto info = RHI::Util::GetFormatInfo(format);
+        const auto info = RHI::Util::GetFormatInfo(format);
         return info == RHI::Util::FormatInfo::Color ? RHI::Aspect::COLOR_BIT : RHI::Aspect::DEPTH_BIT;
     }
-    RHI::LoadOp LoadOpFrom(AttachmentAccess access)
+    RHI::LoadOp LoadOpFrom(const AttachmentAccess access)
     {
         using enum AttachmentAccess;
         switch (access)
@@ -309,7 +311,7 @@ namespace Pistachio
             default: return RHI::LoadOp::DontCare;
         }
     }
-    RHI::ResourceLayout InputLayout(AttachmentUsage usage)
+    RHI::ResourceLayout InputLayout(const AttachmentUsage usage)
     {
         switch (usage)
         {
@@ -347,16 +349,11 @@ namespace Pistachio
         switch (usage)
         {
         case AttachmentUsage::Unspec: [[fallthrough]];
-        case Pistachio::AttachmentUsage::Graphics: return RHI::ResourceAcessFlags::SHADER_READ;
-            break;
-        case Pistachio::AttachmentUsage::Copy: return RHI::ResourceAcessFlags::TRANSFER_READ;
-            break;
-        case Pistachio::AttachmentUsage::Blit: return RHI::ResourceAcessFlags::TRANSFER_READ;
-            break;
-        case Pistachio::AttachmentUsage::Compute: return RHI::ResourceAcessFlags::SHADER_READ | RHI::ResourceAcessFlags::SHADER_WRITE;
-            break;
+        case AttachmentUsage::Graphics: return RHI::ResourceAcessFlags::SHADER_READ;
+        case AttachmentUsage::Copy: return RHI::ResourceAcessFlags::TRANSFER_READ;
+        case AttachmentUsage::Blit: return RHI::ResourceAcessFlags::TRANSFER_READ;
+        case AttachmentUsage::Compute: return RHI::ResourceAcessFlags::SHADER_READ | RHI::ResourceAcessFlags::SHADER_WRITE;
         default: return RHI::ResourceAcessFlags::NONE;
-            break;
         }
     }
     RHI::ResourceAcessFlags OutputDstAccess(AttachmentUsage usage)
@@ -364,15 +361,11 @@ namespace Pistachio
         switch (usage)
         {
         case AttachmentUsage::Unspec: [[fallthrough]];
-        case Pistachio::AttachmentUsage::Graphics: return RHI::ResourceAcessFlags::COLOR_ATTACHMENT_WRITE;
-            break;
-        case Pistachio::AttachmentUsage::Copy: return RHI::ResourceAcessFlags::TRANSFER_WRITE;
-            break;
-        case Pistachio::AttachmentUsage::Blit: return RHI::ResourceAcessFlags::TRANSFER_WRITE;
-            break;
-        case Pistachio::AttachmentUsage::Compute: return RHI::ResourceAcessFlags::SHADER_WRITE | RHI::ResourceAcessFlags::SHADER_READ;
+        case AttachmentUsage::Graphics: return RHI::ResourceAcessFlags::COLOR_ATTACHMENT_WRITE;
+        case AttachmentUsage::Copy: return RHI::ResourceAcessFlags::TRANSFER_WRITE;
+        case AttachmentUsage::Blit: return RHI::ResourceAcessFlags::TRANSFER_WRITE;
+        case AttachmentUsage::Compute: return RHI::ResourceAcessFlags::SHADER_WRITE | RHI::ResourceAcessFlags::SHADER_READ;
         default: return RHI::ResourceAcessFlags::NONE;
-            break;
         }
     }
     RHI::Ptr<RHI::GraphicsCommandList> RenderGraph::GetFirstList()
@@ -396,17 +389,17 @@ namespace Pistachio
         const bool MQ = RendererBase::GetComputeQueue().IsValid();
         if (!MQ) { gfxStage = &GFXstage; cmpStage = &GFXstage; }
         else {gfxStage = &GFXstage; cmpStage = &CMPstage; }
-        //we execute in order of fence vals with the gurantee that if passes overlap they do not share dependencies
-        //this shouldnt be necessary as fence vals should alternate, but well do it anyway
+        //we execute in order of fence vals with the guarantee that if passes overlap they do not share dependencies
+        //this shouldn't be necessary as fence vals should alternate, but well do it anyway
         
         auto gfxQueue = RHI::QueueFamily::Graphics;
         auto cmpQueue = MQ ? RHI::QueueFamily::Compute : RHI::QueueFamily::Graphics;
         while (gfxIndex < levelTransitionIndices.size() && cmpIndex < computeLevelTransitionIndices.size())
         {
-            uint32_t gfx = gfxIndex == 0 ? 0 : levelTransitionIndices[gfxIndex - 1].first;
-            uint32_t cmp = cmpIndex == 0 ? 0 : computeLevelTransitionIndices[cmpIndex - 1].first;
-            RHI::Weak<RHI::GraphicsCommandList> cmpList;
-            RHI::Weak<RHI::GraphicsCommandList> gfxList;
+            const uint32_t gfx = gfxIndex == 0 ? 0 : levelTransitionIndices[gfxIndex - 1].first;
+            const uint32_t cmp = cmpIndex == 0 ? 0 : computeLevelTransitionIndices[cmpIndex - 1].first;
+            RHI::Weak<RHI::GraphicsCommandList> cmpList = nullptr;
+            RHI::Weak<RHI::GraphicsCommandList> gfxList = nullptr;
             
             if (MQ)
             {
@@ -423,12 +416,12 @@ namespace Pistachio
             else
                 ExecuteCMPLevel(cmpIndex++, *cmpStage, gfxList, cmpQueue);
         }
-        RHI::Weak<RHI::GraphicsCommandList> cmpList;
-        RHI::Weak<RHI::GraphicsCommandList> gfxList;
+        RHI::Weak<RHI::GraphicsCommandList> cmpList = nullptr;
+        RHI::Weak<RHI::GraphicsCommandList> gfxList = nullptr;
         if (MQ)
         {
-            cmpList = computeLevelTransitionIndices.size() && cmpIndex ? computeCmdLists[cmpIndex - 1] : nullptr;
-            gfxList = levelTransitionIndices.size() && gfxIndex ? cmdLists[gfxIndex - 1] : nullptr;
+            cmpList = !computeLevelTransitionIndices.empty() && cmpIndex ? computeCmdLists[cmpIndex - 1] : nullptr;
+            gfxList = !levelTransitionIndices.empty() && gfxIndex ? cmdLists[gfxIndex - 1] : nullptr;
         }
         else
         {
@@ -455,12 +448,13 @@ namespace Pistachio
         barrier.AccessFlagsAfter = isDepth ? RHI::ResourceAcessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE : access_fn(info.usage);
         barrier.AccessFlagsBefore = tex.currentAccess;
         //temporary
-        RHI::SubResourceRange range;
-        range.FirstArraySlice = tex.IsArray ? tex.arraySlice : 0;
-        range.imageAspect = FormatAspect(info.format);
-        range.IndexOrFirstMipLevel = tex.mipSlice;
-        range.NumArraySlices = tex.IsArray ? tex.sliceCount : 1;
-        range.NumMipLevels = tex.mipSliceCount;
+        const RHI::SubResourceRange range{
+            .imageAspect = FormatAspect(info.format),
+            .IndexOrFirstMipLevel = tex.mipSlice,
+            .NumMipLevels = tex.mipSliceCount,
+            .FirstArraySlice = tex.IsArray ? tex.arraySlice : 0,
+            .NumArraySlices = tex.IsArray ? tex.sliceCount : 1,
+        };
         if (tex.currentFamily != srcQueue)
         {
             barrier.AccessFlagsBefore = RHI::ResourceAcessFlags::NONE;
@@ -540,13 +534,13 @@ namespace Pistachio
     struct AttachmentType_t<AttachRT>
     {
         using desc_type = RHI::RenderTargetViewDesc;
-        using handle_type = RTVHandle;
+        using handle_type = UniqueRTVHandle;
     };
     template<>
     struct AttachmentType_t<AttachDS>
     {
         using desc_type = RHI::DepthStencilViewDesc;
-        using handle_type = DSVHandle;
+        using handle_type = UniqueDSVHandle;
     };
     template<int type>
     void RenderGraph::FillAttachment(AttachmentInfo& info, std::vector<RHI::RenderingAttachmentDesc>& desc, RGTexture& tex)
@@ -556,12 +550,12 @@ namespace Pistachio
         if constexpr (type == AttachDS) attachment.clearColor = { 1,0,0,0 };
         attachment.loadOp = LoadOpFrom(info.access);
         attachment.storeOp = RHI::StoreOp::Store;
-        typename AttachmentType_t<(AttachmentType)type>::handle_type* handle;
+        typename AttachmentType_t<static_cast<AttachmentType>(type)>::handle_type* handle;
         if constexpr (type == AttachRT) handle = &tex.rtvHandle;
         if constexpr (type == AttachDS) handle = &tex.dsvHandle;
-        if ((*handle).heapIndex == UINT32_MAX)
+        if ((*handle)->heapIndex == UINT32_MAX)
         {
-            typename AttachmentType_t<(AttachmentType)type>::desc_type Desc;
+            typename AttachmentType_t<static_cast<AttachmentType>(type)>::desc_type Desc;
             Desc.arraySlice = tex.arraySlice;
             Desc.format = info.format;
             Desc.TextureArray = tex.IsArray;
@@ -569,7 +563,7 @@ namespace Pistachio
            if constexpr (type == AttachRT) *handle = RendererBase::CreateRenderTargetView(tex.texture, Desc);
            if constexpr (type == AttachDS) *handle = RendererBase::CreateDepthStencilView(tex.texture, Desc);
         }
-        attachment.ImageView = RendererBase::GetCPUHandle(*handle);
+        attachment.ImageView = RendererBase::GetCPUHandle(handle->Get());
     }
     void RenderGraph::LogAttachmentHeader(const AttachmentInfo& att)
     {

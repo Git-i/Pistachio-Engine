@@ -247,6 +247,12 @@ namespace Pistachio {
 	{
 		return Self().ctx.resources[RendererBase::Get().currentFrameIndex].transformBufferDescPS;
 	}
+
+	SamplerHandle Renderer::GetDefaultSampler()
+	{
+		return Self().ctx.defaultSampler.Get();
+	}
+
 	void Pistachio::Renderer::Submit(RHI::Weak<RHI::GraphicsCommandList> list,const RendererVBHandle vb, const RendererIBHandle ib, uint32_t vertexStride)
 	{
 		list->DrawIndexed(ib.size / sizeof(uint32_t),
@@ -254,13 +260,10 @@ namespace Pistachio {
 			GetIBOffset(ib) / sizeof(uint32_t),
 			GetVBOffset(vb) / vertexStride, 0);
 	}
-	SamplerHandle Pistachio::Renderer::GetDefaultSampler()
-	{
-		return Self().ctx.defaultSampler;
-	}
+
 	SamplerHandle Renderer::GetShadowSampler()
 	{
-		return Self().ctx.shadowSampler;
+		return Self().ctx.shadowSampler.Get();
 	}
 	Texture2D& Renderer::GetBrdfTexture()
 	{

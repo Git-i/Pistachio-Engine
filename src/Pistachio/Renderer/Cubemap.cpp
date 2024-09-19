@@ -156,7 +156,7 @@ namespace Pistachio
     {
         RHI::Ptr<RHI::Texture> tex;
         RHI::Ptr<RHI::TextureView> tex_view;
-        RHI::AutomaticAllocationInfo alloc_info{RHI::AutomaticAllocationCPUAccessMode::None};
+        const RHI::AutomaticAllocationInfo alloc_info{RHI::AutomaticAllocationCPUAccessMode::None};
         auto err = RendererBase::GetDevice()->CreateTexture(RHI::TextureDesc{
             .type = RHI::TextureType::Texture2D,
             .width = width,

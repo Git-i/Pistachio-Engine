@@ -70,7 +70,7 @@ inline constexpr EnumType& operator^=(EnumType& a, EnumType b) {                
 
 
 #ifdef __GNUC__
-#define CDECL __attribute__((__cdecl__))
+#define CDECL //__attribute__((__cdecl__))
 #else
 #define CDECL __cdecl
 #endif

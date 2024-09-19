@@ -33,7 +33,7 @@ namespace Pistachio {
 
 	private:
 		friend class RenderGraph;
-		RTVHandle RTView;
+		UniqueRTVHandle RTView;
 		RHI::Ptr<RHI::TextureView> m_view;
 		RHI::Format m_format;
 		uint32_t m_width, m_height, m_mipLevels;
@@ -50,7 +50,7 @@ namespace Pistachio {
 	private:
 		friend class RenderGraph;
 		friend class Scene;
-		DSVHandle DSView;
+		UniqueDSVHandle DSView;
 		RHI::Ptr<RHI::TextureView> m_view;
 		RHI::Format m_format;
 		uint32_t m_width, m_height, m_mipLevels;
@@ -69,7 +69,7 @@ namespace Pistachio {
 	private:
 		friend class RenderGraph;
 		friend class Renderer;
-		RTVHandle RTViews[6];
+		UniqueRTVHandle RTViews[6];
 		RHI::Format m_format;
 		RHI::Ptr<RHI::TextureView> m_view;
 		int m_width, m_height, m_mipLevels;

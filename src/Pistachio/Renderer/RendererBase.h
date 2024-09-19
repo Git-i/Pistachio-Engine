@@ -10,30 +10,69 @@
 #include "Ptr.h"
 #include "TraceRHI.h"
 namespace Pistachio {
-	enum class CullMode {
-		None, Front, Back
+	template<typename T>
+	concept rendererbase_handle = std::is_trivially_copy_assignable_v<T> && requires(T a){
+		{T::Invalid()} -> std::convertible_to<T>;
+		{a == a} -> std::convertible_to<bool>;
 	};
-	enum class PrimitiveTopology
+	template<rendererbase_handle T, void(*deleter)(T)>
+	class UniqueHandle
 	{
-		TriangleList, LineList, LineStrip, Points, TriangleStrip
-	};
-	enum class DepthStencilOp {
-		Less, Less_Equal
+		T data;
+	public:
+		explicit UniqueHandle(T&& data) : data(data) {};
+		UniqueHandle() : data(T::Invalid()) {}
+		UniqueHandle(const UniqueHandle&) = delete;
+		[[nodiscard]] const T* operator->() const
+		{
+			return &data;
+		}
+		[[nodiscard]] T* operator->()
+		{
+			return &data;
+		}
+		UniqueHandle(UniqueHandle&& other) noexcept
+		{
+			data = other.data;
+			other.data = static_cast<T>(T::Invalid());
+		}
+		~UniqueHandle()
+		{
+			if(data == static_cast<T>(T::Invalid())) return;
+			deleter(data);
+		}
+		[[nodiscard]] const T& Get() const { return data; }
+		[[nodiscard]] T& Get() { return data; }
+
+		UniqueHandle& operator=(UniqueHandle&& other) noexcept
+		{
+			data = other.data;
+			other.data = static_cast<T>(T::Invalid());
+			return *this;
+		}
+		UniqueHandle& operator=(const UniqueHandle&) = delete;
 	};
 	struct RTVHandle
 	{
 		uint32_t heapIndex;
 		uint32_t heapOffset;
+		bool operator==(const RTVHandle& other) const {return heapIndex == other.heapIndex && heapOffset == other.heapOffset;}
+		constexpr static auto Invalid() { return RTVHandle{UINT32_MAX, UINT32_MAX};}
 	};
+
 	struct DSVHandle
 	{
 		uint32_t heapIndex;
 		uint32_t heapOffset;
+		bool operator==(const DSVHandle& other) const {return heapIndex == other.heapIndex && heapOffset == other.heapOffset;}
+		constexpr static auto Invalid() { return DSVHandle{UINT32_MAX, UINT32_MAX};}
 	};
 	struct SamplerHandle
 	{
-		uint32_t heapIndex;
-		uint32_t heapOffset;
+		uint32_t heapIndex = UINT32_MAX;
+		uint32_t heapOffset = UINT32_MAX;
+		bool operator==(const SamplerHandle& other) const {return heapIndex == other.heapIndex && heapOffset == other.heapOffset;}
+		constexpr static auto Invalid() {return SamplerHandle{UINT32_MAX, UINT32_MAX};}
 	};
 	struct TrackedDescriptorHeap
 	{
@@ -62,12 +101,12 @@ namespace Pistachio {
 		static void Shutdown();
 		static void EndFrame();
 		static RHI::API GetAPI();
-		static RTVHandle CreateRenderTargetView(RHI::Weak<RHI::Texture> texture, const RHI::RenderTargetViewDesc& viewDesc);
-		static DSVHandle CreateDepthStencilView(RHI::Weak<RHI::Texture> texture, const RHI::DepthStencilViewDesc& viewDesc);
-		static SamplerHandle CreateSampler(const RHI::SamplerDesc& viewDesc);
 		static void DestroyRenderTargetView(RTVHandle handle);
 		static void DestroyDepthStencilView(DSVHandle handle);
 		static void DestroySampler(SamplerHandle handle);
+		static auto CreateRenderTargetView(RHI::Weak<RHI::Texture> texture, const RHI::RenderTargetViewDesc& viewDesc) -> UniqueHandle<RTVHandle, DestroyRenderTargetView>;
+		static auto CreateDepthStencilView(RHI::Weak<RHI::Texture> texture, const RHI::DepthStencilViewDesc& viewDesc) -> UniqueHandle<DSVHandle, DestroyDepthStencilView>;
+		static auto CreateSampler(const RHI::SamplerDesc& viewDesc) -> UniqueHandle<SamplerHandle, DestroySampler>;
 		static RHI::CPU_HANDLE GetCPUHandle(RTVHandle handle);
 		static RHI::CPU_HANDLE GetCPUHandle(DSVHandle handle);
 		static RHI::CPU_HANDLE GetCPUHandle(SamplerHandle handle);
@@ -101,6 +140,7 @@ namespace Pistachio {
 		friend class FrameComposer;
 		friend class Scene;
 		friend class SwapChain;
+		friend class SamplerHandle;
 		TraceRHI::Context traceRHICtx;
 		RHI::Ptr<RHI::Device> device;
 		RHI::Ptr<RHI::GraphicsCommandList> mainCommandList;
@@ -132,11 +172,14 @@ namespace Pistachio {
 		Texture2D blackTexture;
 		//Staging buffer to manage GPU resource updates, default size probably 2mb
 		RHI::Ptr<RHI::Buffer> stagingBuffer;
-		//because staging buffer updates wont happen immediately, we need the number of used bytes
+		//because staging buffer updates won't happen immediately, we need the number of used bytes
 		//staging buffer size will probably never cross 4gb so no need for uint64
 		uint32_t staginBufferPortionUsed;
 		uint32_t stagingBufferSize;
 		bool outstandingResourceUpdate;
 		uint32_t currentFrameIndex;
 	};
+	using UniqueRTVHandle = UniqueHandle<RTVHandle, RendererBase::DestroyRenderTargetView>;
+	using UniqueDSVHandle = UniqueHandle<DSVHandle, RendererBase::DestroyDepthStencilView>;
+	using UniqueSamplerHandle = UniqueHandle<SamplerHandle, RendererBase::DestroySampler>;
 }

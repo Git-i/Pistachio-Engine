@@ -87,9 +87,9 @@ namespace Pistachio
 		Texture2D BrdfTex;
 		CubeMap defaultCubemap;
 
-		SamplerHandle defaultSampler;
-		SamplerHandle brdfSampler;
-		SamplerHandle shadowSampler;
+		UniqueSamplerHandle defaultSampler;
+		UniqueSamplerHandle brdfSampler;
+		UniqueSamplerHandle shadowSampler;
 
 		
 		std::unordered_map<std::string, ComputeShader*> computeShaders;
