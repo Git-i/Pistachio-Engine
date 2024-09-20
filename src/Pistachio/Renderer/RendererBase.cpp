@@ -164,7 +164,7 @@ namespace Pistachio {
 			auto flag = options.exportTexture ? RHI::DeviceCreateFlags::ShareAutomaticMemory: RHI::DeviceCreateFlags::None;
 			RHI::QueueInfo queue_config = physicalDevice->GetQueueInfo();
 			auto [queue_infos, seperate_compute] = CreateCommandQueueDesc(queue_config, options.forceSingleQueue);
-			auto [dev, queue] = RHI::Device::Create(physicalDevice, queue_infos, instance->ID, flag).value();
+			auto [dev, queue] = RHI::Device::Create(physicalDevice, queue_infos, instance, flag).value();
 			device = dev;
 			directQueue = queue[0];
 			if(seperate_compute) computeQueue = queue[1];
@@ -506,7 +506,7 @@ namespace Pistachio {
 		base.device->DestroyDepthStencilView(GetCPUHandle(handle));
 		base.freeDSVs.push_back(handle);
 	}
-	void Pistachio::RendererBase::DestroySampler(SamplerHandle handle)
+	void RendererBase::DestroySampler(SamplerHandle handle)
 	{
 		auto& base = Application::Get().GetRendererBase();
 		base.device->DestroySampler(GetCPUHandle(handle));

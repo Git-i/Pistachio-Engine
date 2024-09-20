@@ -65,12 +65,12 @@ namespace Pistachio {
 		};
 		const std::string& GetShaderDir() {return shaderDir;}
 	private:
-		std::unique_ptr<InputHandler> handler;
 		bool m_headless = false;
-		LayerStack m_layerstack;
-		std::unique_ptr<Window> m_Window;
 		std::unique_ptr<RendererBase> m_rendererBase;
 		std::unique_ptr<Renderer> m_renderer;
+		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<InputHandler> handler;
+		LayerStack m_layerstack;
 		bool m_Running = true;
 		bool m_minimized = false;
 		static Application* s_Instance;

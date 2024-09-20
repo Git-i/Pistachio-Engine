@@ -150,10 +150,10 @@ namespace Pistachio {
 		RHI::Ptr<RHI::CommandAllocator> stagingCommandAllocator;
 		RHI::Ptr<RHI::CommandAllocator> commandAllocators[3];
 		RHI::Ptr<RHI::CommandAllocator> computeCommandAllocators[3];
-		RHI::Ptr<RHI::Instance> instance;
 		RHI::PhysicalDevice* physicalDevice;
 		RHI::Ptr<RHI::CommandQueue> directQueue;
 		RHI::Ptr<RHI::CommandQueue> computeQueue;
+		RHI::Ptr<RHI::Instance> instance;
 		std::vector<TrackedDescriptorHeap> rtvHeaps;
 		std::vector<RTVHandle> freeRTVs;
 		std::vector<TrackedDescriptorHeap> dsvHeaps;
@@ -166,7 +166,7 @@ namespace Pistachio {
 		RHI::Ptr<RHI::Fence> stagingFence;
 		RHI::Ptr<RHI::DescriptorHeap> heap;
 
-		
+
 
 		Texture2D whiteTexture;
 		Texture2D blackTexture;
