@@ -205,14 +205,14 @@ namespace Pistachio {
 		Shader();
 		~Shader();
 		static Shader* Create(const ShaderCreateDesc& desc, std::span<const uint32_t> dynamic_sets, std::optional<uint32_t> push_block = std::nullopt);
-		void Bind(RHI::Weak<RHI::GraphicsCommandList> list);
+		void Bind(RHI::Weak<RHI::GraphicsCommandList> list) const;
 		void GetDepthStencilMode(RHI::DepthStencilMode& mode);
 		uint32_t SetDepthStencilMode(const RHI::DepthStencilMode& mode, ShaderModeSetFlags flags);
 		void GetRasterizerMode(const RHI::RasterizerMode& mode);
 		uint32_t SetRasterizerMode(const RHI::RasterizerMode& mode, ShaderModeSetFlags flags);
 		void GetBlendMode(const RHI::BlendMode& mode);
-		void GetShaderBinding(SetInfo& info, uint32_t setIndex);
-		void ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info);
+		void GetShaderBinding(SetInfo& info, uint32_t setIndex) const;
+		void ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info) const;
 		RHI::Ptr<RHI::RootSignature> GetRootSignature() { return rootSig; };
 		uint32_t SetBlendMode(const RHI::BlendMode& mode, ShaderModeSetFlags flags);
 		RHI::Ptr<RHI::PipelineStateObject> GetCurrentPipeline() { return PSOs[currentPSO]; }

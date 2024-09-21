@@ -45,8 +45,10 @@ namespace Pistachio {
 			handler = std::unique_ptr<InputHandler>(CreateDefaultInputHandler());
 		}
 
+		m_assetManager = std::make_unique<AssetManager>();
 		m_renderer = std::make_unique<Renderer>();
 		m_renderer->Init();
+
 
 		Renderer2D::Init();
 		//Physics::Init();
@@ -57,10 +59,9 @@ namespace Pistachio {
 		lastFrameTime = std::chrono::milliseconds(0);
 	}
 
-	
 	Application::~Application()
 	{
-		Pistachio::Renderer::Shutdown();
+		RendererBase::FlushGPU();
 	}
 
 	void Application::PushLayer(Layer* layer)

@@ -137,7 +137,7 @@ namespace Pistachio {
 		ComputeShader* shd_tightenList = Renderer::GetBuiltinComputeShader("Tighten Clusters");
 		ComputeShader* shd_cullLights = Renderer::GetBuiltinComputeShader("Cull Lights");
 		Shader* shd_prepass = Renderer::GetBuiltinShader("Z-Prepass");
-		Shader* shd_fwd = &assetMan->GetShaderResource(*assetMan->GetAsset("Default Shader"))->GetShader();
+		const Shader* shd_fwd = &assetMan->GetShaderResource(*assetMan->GetAsset("Default Shader"))->GetShader();
 		Shader* shd_Shadow = Renderer::GetBuiltinShader("Shadow Shader");
 		Shader* shd_background = Renderer::GetBuiltinShader("Background Shader");
 		for (uint32_t i = 0; i < RendererBase::numFramesInFlight; i++)
@@ -260,8 +260,8 @@ namespace Pistachio {
 					for (auto entity : meshesToDraw)
 					{
 						auto& meshc = m_Registry.get<MeshRendererComponent>(entity);
-						Model* model = assetMan->GetModelResource(meshc.Model);
-						Mesh& mesh = model->meshes[meshc.modelIndex];
+						const Model* model = assetMan->GetModelResource(meshc.Model);
+						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 						Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
 					}
@@ -319,9 +319,9 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							Model* model = assetMan->GetModelResource(meshc.Model);
+							const Model* model = assetMan->GetModelResource(meshc.Model);
 							if(!model) continue;
-							Mesh& mesh = model->meshes[meshc.modelIndex];
+							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 							for(uint32_t i = 0; i < 4; i++)
 							{
@@ -395,8 +395,8 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							Model* model = assetMan->GetModelResource(meshc.Model);
-							Mesh& mesh = model->meshes[meshc.modelIndex];
+							const Model* model = assetMan->GetModelResource(meshc.Model);
+							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 							Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
 						}
@@ -525,12 +525,12 @@ namespace Pistachio {
 					for (auto entity : meshesToDraw)
 					{
 						auto& meshc = m_Registry.get<MeshRendererComponent>(entity);
-						Material* mtl = assetMan->GetMaterialResource(meshc.material);
+						const Material* mtl = assetMan->GetMaterialResource(meshc.material);
 						mtl->Bind(list);
 						Renderer::FullCBUpdate(mtl->parametersBuffer, mtl->parametersBufferCPU);
-						Shader& shd = assetMan->GetShaderResource(mtl->GetShader())->GetShader();
-						Model* model = assetMan->GetModelResource(meshc.Model);
-						Mesh& mesh = model->meshes[meshc.modelIndex];
+						const Shader& shd = assetMan->GetShaderResource(mtl->GetShader())->GetShader();
+						const Model* model = assetMan->GetModelResource(meshc.Model);
+						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						shd.ApplyBinding(list, passCBinfoVS_PS[RendererBase::GetCurrentFrameIndex()]);
 						shd.ApplyBinding(list, sceneInfo);
 						list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
@@ -889,7 +889,7 @@ namespace Pistachio {
 		if (dirtyMats)
 		{
 			PT_CORE_WARN("Actually sorted");
-			m_Registry.sort<MeshRendererComponent>([](const MeshRendererComponent& lhs, const MeshRendererComponent& rhs) {return lhs.material.m_uuid < rhs.material.m_uuid; });
+			m_Registry.sort<MeshRendererComponent>([](const MeshRendererComponent& lhs, const MeshRendererComponent& rhs) {return lhs.material.GetUUID() < rhs.material.GetUUID(); });
 		}
 	}
 	void Scene::UpdateLightsBuffer()
@@ -922,7 +922,7 @@ namespace Pistachio {
 		for (auto entity : mesh_transform)
 		{
 			auto [mesh, transform] = mesh_transform.get(entity);
-			Model* model = GetAssetManager()->GetModelResource(mesh.Model);
+			const Model* model = GetAssetManager()->GetModelResource(mesh.Model);
 			if (model)
 			{
 				BoundingBox box = model->aabbs[mesh.modelIndex];

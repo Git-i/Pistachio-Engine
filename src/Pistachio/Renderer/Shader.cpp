@@ -242,10 +242,10 @@ namespace Pistachio {
 	}
 
 
-	void Shader::Bind(RHI::Weak<RHI::GraphicsCommandList> list)
+	void Shader::Bind(RHI::Weak<RHI::GraphicsCommandList> list) const
 	{
 		list->SetRootSignature(rootSig);
-		list->SetPipelineState(PSOs[currentPSO]);
+		list->SetPipelineState(PSOs.at(currentPSO));
 	}
 
 	void Shader::GetDepthStencilMode(RHI::DepthStencilMode& mode)
@@ -315,7 +315,7 @@ namespace Pistachio {
 
 
 
-	void Shader::GetShaderBinding(SetInfo& info, uint32_t setIndex)
+	void Shader::GetShaderBinding(SetInfo& info, uint32_t setIndex) const
 	{
 		uint32_t index = UINT32_MAX;
 		for (uint32_t i = 0; i < m_infos.sets.size(); i++)
@@ -326,7 +326,7 @@ namespace Pistachio {
 		info.set = RendererBase::CreateDescriptorSet(layouts[index]);
 	}
 
-	void Shader::ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list,const SetInfo& info)
+	void Shader::ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list,const SetInfo& info) const
 	{
 		list->BindDescriptorSet(info.set, info.setIndex);
 	}

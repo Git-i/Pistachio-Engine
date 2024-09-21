@@ -19,7 +19,11 @@
 
 static const uint32_t STAGING_BUFFER_INITIAL_SIZE = 80 * 1024 * 1024; //todo: reduce this
 namespace Pistachio {
-	
+	static RHI::Device* s_device = nullptr;
+	void exit_handler()
+	{
+		raise(SIGTRAP);
+	}
 	void RendererBase::Shutdown()
 	{
 		auto& base = Application::Get().GetRendererBase();
@@ -125,9 +129,9 @@ namespace Pistachio {
 			using enum RHI::LogLevel;
 			switch(l)
 			{
-				case Error: PT_CORE_ERROR("RHI: {0}", str);
-				case Warn: PT_CORE_WARN("RHI: {0}", str);
-				case Info: PT_CORE_INFO("RHI: {0}", str);
+				case Error: PT_CORE_ERROR("RHI: {0}", str); break;
+				case Warn: PT_CORE_WARN("RHI: {0}", str); break;
+				case Info: PT_CORE_INFO("RHI: {0}", str); break;
 			}
 		});
 		//todo implement device selection
@@ -244,6 +248,8 @@ namespace Pistachio {
 		mainCommandList->Begin(commandAllocators[0]);
 		
 		PT_CORE_INFO("Done Initializing RHI");
+		s_device = device.Raw();
+		std::atexit(exit_handler);
 		return 0;
 	}
 	RHI::API RendererBase::GetAPI()
@@ -252,7 +258,7 @@ namespace Pistachio {
 		return base.instance->GetInstanceAPI();
 	}
 
-	RHI::Ptr<RHI::Instance> RendererBase::GetInstance()
+	RHI::Ptr<RHI::Instance>& RendererBase::GetInstance()
 	{
 		auto& base = Application::Get().GetRendererBase();
 		return base.instance;
@@ -326,6 +332,18 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		return base.device->CreateDescriptorSets(base.heap, 1, &layout).value()[0];
 	}
+	void RendererBase::FlushGPU()
+	{
+		auto& base = Get();
+		auto f = base.device->CreateFence(0).value();
+		base.directQueue->SignalFence(f, 1);
+		f->Wait(1);
+		if(base.computeQueue.IsValid())
+		{
+			base.computeQueue->SignalFence(f, 2);
+			f->Wait(2);
+		}
+	}
 
 	void RendererBase::FlushStagingBuffer()
 	{
@@ -352,12 +370,12 @@ namespace Pistachio {
 
 
 
-	RHI::Ptr<RHI::Device> RendererBase::GetDevice()
+	RHI::Ptr<RHI::Device>& RendererBase::GetDevice()
 	{
 		auto& base = Application::Get().GetRendererBase();
 		return base.device;
 	}
-	RHI::Ptr<RHI::GraphicsCommandList> Pistachio::RendererBase::GetMainCommandList()
+	RHI::Ptr<RHI::GraphicsCommandList>& RendererBase::GetMainCommandList()
 	{
 		auto& base = Application::Get().GetRendererBase();
 		return base.mainCommandList;
@@ -541,7 +559,7 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		return base.traceRHICtx;
 	}
-	RHI::Ptr<RHI::DescriptorHeap> RendererBase::GetMainDescriptorHeap()
+	RHI::Ptr<RHI::DescriptorHeap>& RendererBase::GetMainDescriptorHeap()
 	{ 
 		auto& base = Application::Get().GetRendererBase();
 		return base.heap;
@@ -551,8 +569,8 @@ namespace Pistachio {
 		return base.currentFrameIndex;
 	}
 	
-	RHI::Ptr<RHI::CommandQueue> RendererBase::GetDirectQueue(){return Get().directQueue;}
-	RHI::Ptr<RHI::CommandQueue> RendererBase::GetComputeQueue(){return Get().computeQueue;}
+	RHI::Ptr<RHI::CommandQueue>& RendererBase::GetDirectQueue(){return Get().directQueue;}
+	RHI::Ptr<RHI::CommandQueue>& RendererBase::GetComputeQueue(){return Get().computeQueue;}
 	Texture2D& RendererBase::GetWhiteTexture()
 	{ 
 		auto& base = Application::Get().GetRendererBase();
@@ -575,7 +593,7 @@ namespace Pistachio {
 	{
 		return Application::Get().GetRendererBase();
 	}
-	RHI::Ptr<RHI::GraphicsCommandList> RendererBase::GetStagingCommandList()
+	RHI::Ptr<RHI::GraphicsCommandList>& RendererBase::GetStagingCommandList()
 	{
 		return Get().stagingCommandList;
 	}

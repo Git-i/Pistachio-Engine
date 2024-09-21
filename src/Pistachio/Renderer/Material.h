@@ -21,10 +21,10 @@ namespace Pistachio
 		template<typename ParamTy> void ChangeParam(const std::string& name, const ParamTy& value);
 		static Result<Material*> Create(const char* filepath);
 		void SetShader(Asset shader);
-		const Asset& GetShader() { return shader; }
+		const Asset& GetShader() const { return shader; }
 		//Unsafe: use only if you wrote this engine or know what you're doing
 		template<typename ParamTy> void ChangeParam(uint32_t size,const ParamTy* value, uint32_t offset);
-		void Bind(RHI::Weak<RHI::GraphicsCommandList> list);
+		void Bind(RHI::Weak<RHI::GraphicsCommandList> list) const;
 		RendererCBHandle parametersBuffer;
 		void* parametersBufferCPU;
 	public:
@@ -63,7 +63,7 @@ namespace Pistachio
 	template<typename ParamTy>
 	inline void Material::ChangeParam(const std::string& name, const ParamTy& value)
 	{
-		ShaderAsset* res = GetAssetManager()->GetShaderResource(shader);
+		const ShaderAsset* res = GetAssetManager()->GetShaderResource(shader);
 		ParamInfo info = res->GetParameterInfo(name);
 		PT_CORE_ASSERT(info.offset != UINT32_MAX);
 		//single component

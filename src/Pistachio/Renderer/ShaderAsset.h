@@ -36,10 +36,10 @@ namespace Pistachio
 	public:
 		~ShaderAsset();
 		static Result<ShaderAsset*> Create(const char* filename);
-		ParamInfo GetParameterInfo(const std::string& paramName);
-		inline Shader& GetShader() { return shader; }
-		inline const Shader& GetShader() const { return shader; }
-		inline uint32_t GetParamBufferSize() { return paramBufferSize; }
+		[[nodiscard]] ParamInfo GetParameterInfo(const std::string& paramName) const;
+		[[nodiscard]] Shader& GetShader() { return shader; }
+		[[nodiscard]] const Shader& GetShader() const { return shader; }
+		[[nodiscard]] uint32_t GetParamBufferSize() const { return paramBufferSize; }
 	private:
 		friend class RendererContext;
 		uint32_t paramBufferSize;

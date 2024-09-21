@@ -4,6 +4,7 @@ namespace Pistachio {
 	class PISTACHIO_API RefCountedObject
 	{
 	public:
+		virtual ~RefCountedObject() = default;
 		int hold() const;
 		int release() const;
 		int count();

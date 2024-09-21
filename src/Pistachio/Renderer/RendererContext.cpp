@@ -213,10 +213,10 @@ namespace Pistachio
 		Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderDesc, vs,ps, 1, 1, &dsMode,1, &blendMode,1,&rsMode);
 		ShaderDesc.RTVFormats[0] = RHI::Format::R16G16B16A16_FLOAT;
 		ShaderDesc.DSVFormat = RHI::Format::D32_FLOAT;
-		ShaderDesc.InputDescription = Pistachio::Mesh::GetLayout();
-		ShaderDesc.numInputs = Pistachio::Mesh::GetLayoutSize();
+		ShaderDesc.InputDescription = Mesh::GetLayout();
+		ShaderDesc.numInputs = Mesh::GetLayoutSize();
 		PT_CORE_INFO("Creating Default Forward Shader");
-		ShaderAsset* fwdShader = new ShaderAsset();
+		auto fwdShader = new ShaderAsset();
 		fwdShader->GetShader().CreateStack(ShaderDesc, {{0,4}}, std::nullopt);
 		fwdShader->paramBufferSize = 12;
 		fwdShader->parametersMap["Diffuse"] = ParamInfo{ 0,ParamType::Float };
@@ -226,18 +226,18 @@ namespace Pistachio
 		fwdShader->bindingsMap["Metallic Texture"] = 1;
 		fwdShader->bindingsMap["Roughness Texture"] = 2;
 		fwdShader->bindingsMap["Normal Texture"] = 3;
-		GetAssetManager()->FromResource(fwdShader, "Default Shader", Pistachio::ResourceType::Shader);
+		defaultShader = GetAssetManager()->FromResource(fwdShader, "Default Shader", Pistachio::ResourceType::Shader).value();
 
 		//Z-Prepass
-		Pistachio::Helpers::FillDepthStencilMode(dsMode);
-		Pistachio::Helpers::BlendModeDisabledBlend(blendMode);
-		Pistachio::Helpers::FillRaseterizerMode(rsMode);
+		Helpers::FillDepthStencilMode(dsMode);
+		Helpers::BlendModeDisabledBlend(blendMode);
+		Helpers::FillRaseterizerMode(rsMode);
 		vs = shader_dir + "StandaloneVertexShader.rbc";
-		Pistachio::Helpers::ZeroAndFillShaderDesc(ShaderDesc,
+		Helpers::ZeroAndFillShaderDesc(ShaderDesc,
 			vs,std::string_view(), 0, 1, &dsMode, 1, &blendMode, 1, &rsMode);
 		ShaderDesc.DSVFormat = RHI::Format::D32_FLOAT;
-		ShaderDesc.InputDescription = Pistachio::Mesh::GetLayout();
-		ShaderDesc.numInputs = Pistachio::Mesh::GetLayoutSize();
+		ShaderDesc.InputDescription = Mesh::GetLayout();
+		ShaderDesc.numInputs = Mesh::GetLayoutSize();
 		PT_CORE_INFO("Creating Z-Prepass Shader");
 		shaders["Z-Prepass"] = Shader::Create(ShaderDesc, {{0u}}, std::nullopt);
 

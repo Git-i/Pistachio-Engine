@@ -114,18 +114,19 @@ namespace Pistachio {
 		static void PushTextureUpdate(RHI::Weak<RHI::Texture> texture, uint32_t imgByteSize,const void* data,RHI::SubResourceRange* range, RHI::Extent3D imageExtent, RHI::Offset3D imageOffset,RHI::Format format);
 		static RHI::Ptr<RHI::DescriptorSet> CreateDescriptorSet(RHI::Ptr<RHI::DescriptorSetLayout> layout);
 		static void FlushStagingBuffer();
+		static void FlushGPU();
 		static void DrawIndexed(uint32_t indexCount);
 		bool Init(InitOptions& options);
-		static RHI::Ptr<RHI::Device> GetDevice();
-		static RHI::Ptr<RHI::Instance> GetInstance();
-		static RHI::Ptr<RHI::GraphicsCommandList> GetMainCommandList();
+		static RHI::Ptr<RHI::Device>& GetDevice();
+		static RHI::Ptr<RHI::Instance>& GetInstance();
+		static RHI::Ptr<RHI::GraphicsCommandList>& GetMainCommandList();
 		//To be used when creating new stuff to transition to optimal layout
-		static RHI::Ptr<RHI::GraphicsCommandList> GetStagingCommandList();
-		static RHI::Ptr<RHI::DescriptorHeap> GetMainDescriptorHeap();
-		static RHI::Ptr<RHI::Texture> GetBackBufferTexture(uint32_t index);
+		static RHI::Ptr<RHI::GraphicsCommandList>& GetStagingCommandList();
+		static RHI::Ptr<RHI::DescriptorHeap>& GetMainDescriptorHeap();
+		static RHI::Ptr<RHI::Texture>& GetBackBufferTexture(uint32_t index);
 		static RHI::PhysicalDevice* GetPhysicalDevice();
-		static RHI::Ptr<RHI::CommandQueue> GetDirectQueue();
-		static RHI::Ptr<RHI::CommandQueue> GetComputeQueue(); ///<-Returns Invalid Ptr if using single queue
+		static RHI::Ptr<RHI::CommandQueue>& GetDirectQueue();
+		static RHI::Ptr<RHI::CommandQueue>& GetComputeQueue(); ///<-Returns Invalid Ptr if using single queue
 		static Texture2D& GetWhiteTexture();
 		static Texture2D& GetBlackTexture();
 		static uint32_t GetCurrentFrameIndex();

@@ -61,9 +61,9 @@ namespace Pistachio {
 	
 	class PISTACHIO_API Renderer {
 	public:
-		static void Shutdown();
+		void Shutdown();
 		static void ChangeSkybox(const char* filename);
-		static void Init();
+		void Init();
 		static void EndScene();
 		static void Submit(Mesh* mesh, Shader* shader,  Material* mat, int ID);
 		static void FreeVertexBuffer(const RendererVBHandle handle);

@@ -10,12 +10,13 @@
 #include <type_traits>
 #include "AssetManager.h"
 
+#include <Pistachio/Core/Application.h>
+
 namespace Pistachio
 {
 	AssetManager* GetAssetManager()
 	{
-		static AssetManager s_AssetMan;
-		return &s_AssetMan;
+		return &Application::Get().GetAssetManager();
 	}
 	Asset::Asset(const Asset& other)
 	{
@@ -32,9 +33,7 @@ namespace Pistachio
 			auto res = assetMan->assetResourceMap[m_uuid];
 			if (res->release() == 0)
 			{
-				if (m_type == ResourceType::Material) {delete ((Material*)res);}
-				if (m_type == ResourceType::Texture) { delete ((Texture2D*)res); }
-				if (m_type == ResourceType::Model) { delete ((Model*)res);  }
+				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
 				auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
@@ -52,9 +51,7 @@ namespace Pistachio
 			auto res = assetMan->assetResourceMap[m_uuid];
 			if (res->release() == 0)
 			{
-				if (m_type == ResourceType::Material) {  delete ((Material*)res); }
-				if (m_type == ResourceType::Texture) { delete ((Texture2D*)res);  }
-				if (m_type == ResourceType::Model) { delete ((Model*)res);  }
+				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
 				auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
@@ -84,13 +81,9 @@ namespace Pistachio
 		if (m_uuid) {
 			if (res->release() == 0)
 			{
-				if (m_type == ResourceType::Material) {
-					delete ((Material*)res);
-				}
-				if (m_type == ResourceType::Texture) { delete ((Texture2D*)res);}
-				if (m_type == ResourceType::Model) { delete ((Model*)res);}
+				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
-				auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
+				const auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
 			}
 		}
@@ -146,39 +139,43 @@ namespace Pistachio
 			PT_CORE_INFO("Live object with id: {0} at memory location {1}", (uint64_t)uuid, (void*)res);
 		}
 	}
-	Material* AssetManager::GetMaterialResource(Asset& a) 
+
+	const Material* AssetManager::GetMaterialResource(Asset& a) const
 	{ 
 		auto it = assetResourceMap.find(a.m_uuid);
 		if (it != assetResourceMap.end())
 		{
-			return (Material*)(assetResourceMap[a.m_uuid]);
+			return dynamic_cast<Material*>(it->second);
 		}
 		return nullptr;
 	}
-	Texture2D* AssetManager::GetTexture2DResource(Asset& a) 
+
+	const Texture2D* AssetManager::GetTexture2DResource(Asset& a) const
 	{
 		auto it = assetResourceMap.find(a.m_uuid);
 		if (it != assetResourceMap.end())
 		{
-			return (Texture2D*)(assetResourceMap[a.m_uuid]);
+			return dynamic_cast<Texture2D*>(it->second);
 		}
 		return nullptr;
 	}
-	Model* AssetManager::GetModelResource(Asset& a)
+
+	const Model* AssetManager::GetModelResource(Asset& a) const
 	{
 		auto it = assetResourceMap.find(a.m_uuid);
 		if (it != assetResourceMap.end())
 		{
-			return (Model*)(assetResourceMap[a.m_uuid]);
+			return dynamic_cast<Model*>(it->second);
 		}
 		return nullptr;
 	}
-	ShaderAsset* AssetManager::GetShaderResource(const Asset& a)
+
+	const ShaderAsset* AssetManager::GetShaderResource(const Asset& a) const
 	{
 		auto it = assetResourceMap.find(a.m_uuid);
 		if (it != assetResourceMap.end())
 		{
-			return (ShaderAsset*)(assetResourceMap[a.m_uuid]);
+			return dynamic_cast<ShaderAsset*>(it->second);
 		}
 		return nullptr;
 	}
@@ -202,27 +199,28 @@ namespace Pistachio
 			else if (type == ResourceType::Material) obj = Material::Create(filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Shader) obj = ShaderAsset::Create(filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Model) obj = Model::Create(filename.c_str()).transform(result_to_ref_obj);
-			else if (type == ResourceType::Skybox) obj = Skybox::Create(filename.c_str()).transform(result_to_ref_obj);
+			else if (type == ResourceType::Skybox) obj = Skybox::Create(filename).transform(result_to_ref_obj);
 			else obj = ezr::err(Error(ErrorType::InvalidResourceType, PT_PRETTY_FUNCTION));
 
 			if(!obj) return ezr::err(std::move(obj).err());
 			assetResourceMap[uuid] = obj.value();
 			pathUUIDMap[filename] = uuid;
+			assetResourceMap.at(uuid)->release();
 			return ezr::ok(Asset(uuid, type));
 		}
 	}
-	Asset AssetManager::FromResource(RefCountedObject* resource,const std::string& in, ResourceType type)
+	std::optional<Asset> AssetManager::FromResource(RefCountedObject* resource,const std::string& in, ResourceType type)
 	{
-		if (auto it = pathUUIDMap.find(in); it != pathUUIDMap.end())
+		if (pathUUIDMap.contains(in))
 		{
-			assetResourceMap[it->second] = resource;
-			return Asset(it->second, type);
+			return std::nullopt;
 		}
 		else
 		{
 			UUID uuid = UUID();
 			assetResourceMap[uuid] = resource;
 			pathUUIDMap[in] = uuid;
+			assetResourceMap.at(uuid)->release();
 			return Asset(uuid, type);
 		}
 	}

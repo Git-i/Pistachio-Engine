@@ -132,7 +132,7 @@ namespace Pistachio
         returnVal->shader.CreateStack(desc, {{1u}}, std::nullopt);
         return ezr::ok(returnVal);
     }
-    ParamInfo ShaderAsset::GetParameterInfo(const std::string& paramName)
+    ParamInfo ShaderAsset::GetParameterInfo(const std::string& paramName) const
     {
         if (parametersMap.find(paramName) != parametersMap.end())
         {

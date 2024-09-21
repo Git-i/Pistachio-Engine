@@ -10,21 +10,22 @@ namespace Pistachio
 	class PISTACHIO_API AssetManager
 	{
 	public:
-		Result<Asset> CreateMaterialAsset(const std::string& filename);
-		Result<Asset> CreateTexture2DAsset(const std::string& filename);
-		Result<Asset> CreateModelAsset(const std::string& filename);
-		Result<Asset> CreateShaderAsset(const std::string& filename);
-		Result<Asset> CreateSkyboxAsset(const std::string& filename);
-		std::optional<Asset> GetAsset(const std::string& resource_name);
-		std::string GetAssetFileName(const Asset& asset);
+		[[nodiscard]] Result<Asset> CreateMaterialAsset(const std::string& filename);
+		[[nodiscard]] Result<Asset> CreateTexture2DAsset(const std::string& filename);
+		[[nodiscard]] Result<Asset> CreateModelAsset(const std::string& filename);
+		[[nodiscard]] Result<Asset> CreateShaderAsset(const std::string& filename);
+		[[nodiscard]] Result<Asset> CreateSkyboxAsset(const std::string& filename);
+		[[nodiscard]] std::optional<Asset> GetAsset(const std::string& resource_name);
+		[[nodiscard]] std::string GetAssetFileName(const Asset& asset);
 		void ReportLiveObjects();
-		Material* GetMaterialResource(Asset& a);
-		Texture2D* GetTexture2DResource(Asset& a);
-		Model* GetModelResource(Asset& a);
-		ShaderAsset* GetShaderResource(const Asset& a);
+		[[nodiscard]] const Material* GetMaterialResource(Asset& a) const;
+		[[nodiscard]] const Texture2D* GetTexture2DResource(Asset& a) const;
+		[[nodiscard]] const Model* GetModelResource(Asset& a) const;
+		[[nodiscard]] const ShaderAsset* GetShaderResource(const Asset& a) const;
 		friend class Asset;
 		//intended to only be used by engine developer. it will most likely leak memory otherwise
-		Asset FromResource(RefCountedObject* resource, const std::string& str_id, ResourceType type);
+		[[nodiscard]] std::optional<Asset> FromResource(RefCountedObject* resource, const std::string& str_id, ResourceType type);
+		~AssetManager() { ReportLiveObjects(); }
 	private:
 		friend class Renderer;
 		Result<Asset> CreateAsset(const std::string& filename, ResourceType type);

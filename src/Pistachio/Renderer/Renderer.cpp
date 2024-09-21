@@ -23,7 +23,7 @@ namespace Pistachio {
 	}
 	void Renderer::Init()
 	{
-		Self().ctx.Initailize();
+		ctx.Initailize();
 	}
 	void Renderer::ChangeRGTexture(RGTextureHandle& texture, RHI::ResourceLayout newLayout, RHI::ResourceAcessFlags newAccess,RHI::QueueFamily newFamily)
 	{

@@ -12,7 +12,7 @@
 #include "Pistachio/Renderer/Shader.h"
 #include "Pistachio/Renderer/Camera.h"
 #include "Pistachio/Core/Input.h"
-#include <complex.h>
+#include "Pistachio/Asset/AssetManager.h"
 #include <memory>
 namespace Pistachio {
 
@@ -43,7 +43,7 @@ namespace Pistachio {
 	class PISTACHIO_API Application
 	{
 	public:
-		Application(const char* name, const ApplicationOptions& options = ApplicationOptions());
+		explicit Application(const char* name, const ApplicationOptions& options = ApplicationOptions());
 		virtual ~Application();
 		void Run();
 		void Step();
@@ -52,21 +52,23 @@ namespace Pistachio {
 		void PushOverlay(Layer* overlay);
 		bool OnWindowResize(WindowResizeEvent& e);
 		void SetInputHandler(std::unique_ptr<InputHandler> handler);
-		inline RendererBase& GetRendererBase() {return *m_rendererBase;}
-		inline Renderer& GetRenderer() {return *m_renderer;}
-		inline InputHandler& GetInputHandler() {return *handler;}
+		[[nodiscard]] RendererBase& GetRendererBase() {return *m_rendererBase;}
+		[[nodiscard]] Renderer& GetRenderer() {return *m_renderer;}
+		[[nodiscard]] InputHandler& GetInputHandler() {return *handler;}
+		[[nodiscard]] AssetManager& GetAssetManager() {return *m_assetManager;}
 		static Application& Get();
 		static bool Exists();
-		inline Window* GetWindow() { return m_Window.get(); }
+		[[nodiscard]] Window* GetWindow() { return m_Window.get(); }
 		void SetImGuiContext(void* ctx);
 		void Stop() {m_Running = false;}
-		bool IsHeadless() {
+		[[nodiscard]] bool IsHeadless() const {
 			return m_headless;
 		};
 		const std::string& GetShaderDir() {return shaderDir;}
 	private:
 		bool m_headless = false;
 		std::unique_ptr<RendererBase> m_rendererBase;
+		std::unique_ptr<AssetManager> m_assetManager;
 		std::unique_ptr<Renderer> m_renderer;
 		std::unique_ptr<Window> m_Window;
 		std::unique_ptr<InputHandler> handler;

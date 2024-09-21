@@ -18,7 +18,6 @@ namespace Pistachio
 	{
 	public:
 		friend class AssetManager;
-		friend class Scene;
 		~Asset();
 		Asset() = default;
 		Asset(const Asset&);
@@ -26,7 +25,8 @@ namespace Pistachio
 		void operator=(Asset&& other) noexcept;
 		bool operator==(const Asset& other) const { return m_uuid == other.m_uuid; };
 		int ViewRefCount();
-		ResourceType GetType() const { return m_type; }
+		[[nodiscard]] UUID GetUUID() const { return m_uuid; };
+		[[nodiscard]] ResourceType GetType() const { return m_type; }
 	private:
 		Asset(UUID, ResourceType);
 	private:

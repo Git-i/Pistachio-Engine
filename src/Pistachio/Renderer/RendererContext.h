@@ -17,6 +17,8 @@ Holds data for the Renderer
 #include <cstdint>
 #include <functional>
 #include <zconf.h>
+#include <Pistachio/Asset/Asset.h>
+
 namespace Pistachio
 {
 	struct PISTACHIO_API TransformData
@@ -86,6 +88,7 @@ namespace Pistachio
 		FrameResource resources[RendererBase::numFramesInFlight];
 		Texture2D BrdfTex;
 		CubeMap defaultCubemap;
+		Asset defaultShader;
 
 		UniqueSamplerHandle defaultSampler;
 		UniqueSamplerHandle brdfSampler;
