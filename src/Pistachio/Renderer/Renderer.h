@@ -100,7 +100,8 @@ namespace Pistachio {
 		{
 			
 		}
-		
+		//todo: reconsider?
+		static const Mesh* UnitCube();
 	private:
 		static void GrowMeshBuffer(uint32_t minExtraSize,
 			RHI::BufferUsage usage,
@@ -114,5 +115,8 @@ namespace Pistachio {
 	private:
 		friend class Scene;
 		RendererContext ctx;
+		std::unique_ptr<const Mesh> unit_cube;
 	};
+
+
 }

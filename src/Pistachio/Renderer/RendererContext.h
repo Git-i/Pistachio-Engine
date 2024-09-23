@@ -95,8 +95,8 @@ namespace Pistachio
 		UniqueSamplerHandle shadowSampler;
 
 		
-		std::unordered_map<std::string, ComputeShader*> computeShaders;
-		std::unordered_map<std::string, Shader*> shaders;
+		std::unordered_map<std::string, std::unique_ptr<ComputeShader>> computeShaders;
+		std::unordered_map<std::string, std::unique_ptr<Shader>> shaders;
     };
     
 }

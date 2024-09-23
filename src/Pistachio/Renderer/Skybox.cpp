@@ -117,9 +117,9 @@ namespace Pistachio
             delete base; return e;
         }
 
-        e = CubeMap::Create(base_ktx).handle(
+        e = CubeMap::Create(pf_ktx).handle(
             [this](auto&& cm){
-                base = cm;
+                pf = cm;
                 return Error(ErrorType::Success);
             },
             [](auto&& err) { return err; }

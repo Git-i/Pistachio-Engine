@@ -141,6 +141,7 @@ namespace Pistachio
 				256).value();
     }
 
+
     void RendererContext::Initailize()
     {
 		auto& shader_dir = Application::Get().GetShaderDir();
@@ -194,13 +195,13 @@ namespace Pistachio
 
 		PT_CORE_INFO("Creating Compute Shaders...");
 		PT_CORE_INFO("Build Clusters");
-		computeShaders["Build Clusters"] = ComputeShader::Create(   {shader_dir + "CFBuildClusters_cs.rbc"} , RHI::ShaderMode::File);
+		computeShaders["Build Clusters"] = std::unique_ptr<ComputeShader>{ComputeShader::Create(   {shader_dir + "CFBuildClusters_cs.rbc"} , RHI::ShaderMode::File)};
 		PT_CORE_INFO("Filter Clusters");
-		computeShaders["Filter Clusters"] = ComputeShader::Create({shader_dir + "CFActiveClusters_cs.rbc"}, RHI::ShaderMode::File);
+		computeShaders["Filter Clusters"] = std::unique_ptr<ComputeShader>{ComputeShader::Create({shader_dir + "CFActiveClusters_cs.rbc"}, RHI::ShaderMode::File)};
 		PT_CORE_INFO("Tighten Clusters");
-		computeShaders["Tighten Clusters"] = ComputeShader::Create({ shader_dir + "CFTightenList_cs.rbc"}, RHI::ShaderMode::File);
+		computeShaders["Tighten Clusters"] = std::unique_ptr<ComputeShader>{ComputeShader::Create({ shader_dir + "CFTightenList_cs.rbc"}, RHI::ShaderMode::File)};
 		PT_CORE_INFO("Cull Lights");
-		computeShaders["Cull Lights"] = ComputeShader::Create({ shader_dir+ "CFCullLights_cs.rbc"}, RHI::ShaderMode::File);
+		computeShaders["Cull Lights"] = std::unique_ptr<ComputeShader>{ComputeShader::Create({ shader_dir+ "CFCullLights_cs.rbc"}, RHI::ShaderMode::File)};
 		
 		
 
@@ -239,14 +240,14 @@ namespace Pistachio
 		ShaderDesc.InputDescription = Mesh::GetLayout();
 		ShaderDesc.numInputs = Mesh::GetLayoutSize();
 		PT_CORE_INFO("Creating Z-Prepass Shader");
-		shaders["Z-Prepass"] = Shader::Create(ShaderDesc, {{0u}}, std::nullopt);
+		shaders["Z-Prepass"] = std::unique_ptr<Shader>{Shader::Create(ShaderDesc, {{0u}}, std::nullopt)};
 
 		//shadow shaders
 		vs = shader_dir + "Shadow_vs.rbc";
 		ShaderDesc.VS = RHI::ShaderCode{ vs };
 		ShaderDesc.RasterizerModes->cullMode = RHI::CullMode::Front;
 		PT_CORE_INFO("Creating Shadow Shader");
-		shaders["Shadow Shader"] = Shader::Create(ShaderDesc, {{0u}}, 1);
+		shaders["Shadow Shader"] = std::unique_ptr<Shader>{Shader::Create(ShaderDesc, {{0u}}, 1)};
 
 
 		BrdfTex.CreateStack(512, 512, RHI::Format::R16G16_FLOAT, nullptr PT_DEBUG_REGION(,"Renderer -> White Texture"),TextureFlags::Compute);
@@ -261,9 +262,9 @@ namespace Pistachio
 		ShaderDesc.NumRenderTargets = 1;
 		ShaderDesc.RTVFormats[0] = RHI::Format::R16G16B16A16_FLOAT;
 		PT_CORE_INFO("Creating Background Shader");
-		shaders["Background Shader"] = Shader::Create(ShaderDesc, {});
+		shaders["Background Shader"] = std::unique_ptr<Shader>{Shader::Create(ShaderDesc, {})};
 
-		SetInfo brdfTexInfo;
+		ResourceSet brdfTexInfo;
 		brdfShader->GetShaderBinding(brdfTexInfo, 0);
 		brdfTexInfo.UpdateTextureBinding(BrdfTex.GetView(), 0, RHI::DescriptorType::CSTexture);
 		RHI::TextureMemoryBarrier barr;

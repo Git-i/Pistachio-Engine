@@ -31,7 +31,7 @@ namespace Pistachio
 		friend class MaterialSerializer;
 		std::vector<Asset> m_textures;
 		Asset shader;
-		SetInfo mtlInfo;
+		ResourceSet mtlInfo;
 	};
 
 	class PISTACHIO_API MaterialSerializer
@@ -63,7 +63,7 @@ namespace Pistachio
 	template<typename ParamTy>
 	inline void Material::ChangeParam(const std::string& name, const ParamTy& value)
 	{
-		const ShaderAsset* res = GetAssetManager()->GetShaderResource(shader);
+		const ShaderAsset* res = GetAssetManager()->GetResource<ShaderAsset>(shader);
 		ParamInfo info = res->GetParameterInfo(name);
 		PT_CORE_ASSERT(info.offset != UINT32_MAX);
 		//single component

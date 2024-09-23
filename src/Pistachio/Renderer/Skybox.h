@@ -15,6 +15,9 @@ namespace Pistachio
         [[nodiscard]] static Result<Skybox*> Create(const void* skybox_memory, size_t size);
         [[nodiscard]] Error Initialize(std::string_view path);
         [[nodiscard]] Error Initialize(const void* skybox_memory, size_t size);
+        [[nodiscard]] const CubeMap* Base() const {return base;}
+        [[nodiscard]] const CubeMap* Irradiance() const {return ir;}
+        [[nodiscard]] const CubeMap* SpecularPrefiltered() const {return pf;}
         ~Skybox();
     private:
         CubeMap* base{};

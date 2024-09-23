@@ -14,6 +14,8 @@
 #include "Pistachio/Core/Window.h"
 #include "Pistachio/Core/Math.h"
 #include <functional>
+
+#include "MeshFactory.h"
 #include "Pistachio/Core/Application.h"
 
 namespace Pistachio {
@@ -24,6 +26,7 @@ namespace Pistachio {
 	void Renderer::Init()
 	{
 		ctx.Initailize();
+		unit_cube = std::unique_ptr<const Mesh>(MeshFactory::CreateCube());
 	}
 	void Renderer::ChangeRGTexture(RGTextureHandle& texture, RHI::ResourceLayout newLayout, RHI::ResourceAcessFlags newAccess,RHI::QueueFamily newFamily)
 	{
@@ -60,7 +63,7 @@ namespace Pistachio {
 	{
 		if (auto it = Self().ctx.computeShaders.find(name); it != Self().ctx.computeShaders.end())
 		{
-			return it->second;
+			return it->second.get();
 		}
 		return nullptr;
 	}
@@ -68,7 +71,7 @@ namespace Pistachio {
 	{
 		if (auto it = Self().ctx.shaders.find(name); it != Self().ctx.shaders.end())
 		{
-			return it->second;
+			return it->second.get();
 		}
 		return nullptr;
 	}
@@ -78,6 +81,10 @@ namespace Pistachio {
 		auto [a,b] = Self().ctx.constantBufferAllocator.Allocate(&Renderer::GrowConstantBuffer, &Renderer::DefragmentConstantBuffer,
 			RendererUtils::ConstantBufferElementSize(size));
 		return { a,size, b };
+	}
+	const Mesh* Renderer::UnitCube()
+	{
+		return Self().unit_cube.get();
 	}
 	void Renderer::GrowMeshBuffer(uint32_t minExtraSize,
 			RHI::BufferUsage usage,

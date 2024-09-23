@@ -140,45 +140,8 @@ namespace Pistachio
 		}
 	}
 
-	const Material* AssetManager::GetMaterialResource(Asset& a) const
-	{ 
-		auto it = assetResourceMap.find(a.m_uuid);
-		if (it != assetResourceMap.end())
-		{
-			return dynamic_cast<Material*>(it->second);
-		}
-		return nullptr;
-	}
 
-	const Texture2D* AssetManager::GetTexture2DResource(Asset& a) const
-	{
-		auto it = assetResourceMap.find(a.m_uuid);
-		if (it != assetResourceMap.end())
-		{
-			return dynamic_cast<Texture2D*>(it->second);
-		}
-		return nullptr;
-	}
 
-	const Model* AssetManager::GetModelResource(Asset& a) const
-	{
-		auto it = assetResourceMap.find(a.m_uuid);
-		if (it != assetResourceMap.end())
-		{
-			return dynamic_cast<Model*>(it->second);
-		}
-		return nullptr;
-	}
-
-	const ShaderAsset* AssetManager::GetShaderResource(const Asset& a) const
-	{
-		auto it = assetResourceMap.find(a.m_uuid);
-		if (it != assetResourceMap.end())
-		{
-			return dynamic_cast<ShaderAsset*>(it->second);
-		}
-		return nullptr;
-	}
 	std::optional<Asset> AssetManager::GetAsset(const std::string& filename)
 	{
 		if(pathUUIDMap.contains(filename)) return Asset(pathUUIDMap[filename], ResourceType::Unknown);

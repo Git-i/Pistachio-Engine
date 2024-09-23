@@ -127,7 +127,7 @@ namespace Pistachio
 				return error;
 			});
 		if(!e.Successful()) return ezr::err(std::move(e));
-		const ShaderAsset* shader = GetAssetManager()->GetShaderResource(mat->shader);
+		const ShaderAsset* shader = GetAssetManager()->GetResource<ShaderAsset>(mat->shader);
 		shader->GetShader().GetShaderBinding(mat->mtlInfo, 3);
 		Renderer::AllocateConstantBuffer(shader->GetParamBufferSize());
 		
@@ -139,7 +139,7 @@ namespace Pistachio
 	}
 	void Material::Bind(RHI::Weak<RHI::GraphicsCommandList> list) const
 	{
-		const ShaderAsset* shader_asset = GetAssetManager()->GetShaderResource(shader);
+		const ShaderAsset* shader_asset = GetAssetManager()->GetResource<ShaderAsset>(shader);
 		const Shader& shd = shader_asset->GetShader();
 		shd.Bind(list);
 		shd.ApplyBinding(list, mtlInfo);

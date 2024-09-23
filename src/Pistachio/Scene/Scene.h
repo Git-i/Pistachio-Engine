@@ -47,7 +47,7 @@ namespace Pistachio {
 	};
 	class PISTACHIO_API Scene {
 	public:
-		Scene(SceneDesc desc  = SceneDesc());
+		explicit Scene(SceneDesc desc  = SceneDesc());
 		~Scene();
 		Entity CreateEntity(const std::string& name = "");
 		Entity DuplicateEntity(Entity e);
@@ -60,6 +60,7 @@ namespace Pistachio {
 		void DestroyEntity(Entity entity);
 		void DefferedDelete(Entity entity);
 		void ReparentEntity(Entity entity, Entity new_parent);
+		void SyncSkybox();
 		template<typename _ComponentTy> auto GetAllComponents() { return m_Registry.view<_ComponentTy>(); }
 		Entity GetRootEntity();
 		Entity GetPrimaryCameraEntity();
@@ -71,7 +72,7 @@ namespace Pistachio {
 		const RenderTexture& GetFinalRender();
 		//const RenderTexture& GetGBuffer() { return m_gBuffer; };
 		//const RenderTexture& GetRenderedScene() { return m_finalRender; };
-		template<typename T> void OnComponentAdded(Entity entity, T& component);
+
 	private:
 		Entity CreateRootEntity(UUID ID);
 		void UpdateObjectCBs();
@@ -92,15 +93,14 @@ namespace Pistachio {
 		uint32_t numShadowDirLights = 0;
 		uint32_t numRegularDirLights = 0;
 		AtlasAllocator sm_allocator;
-		Pistachio::Mesh* ScreenSpaceQuad;//?
 		entt::registry m_Registry;
 		entt::entity root;
 		physx::PxScene* m_PhysicsScene = nullptr;
-		RGTextureHandle finalRenderTex;
-		uint32_t lightListSize;
-		uint32_t clustersDim[3];
-		uint32_t sceneResolution[2];
-		PassConstants passConstants;
+		RGTextureHandle finalRenderTex{};
+		uint32_t lightListSize = 0;
+		uint32_t clustersDim[3]{};
+		uint32_t sceneResolution[2]{};
+		PassConstants passConstants{};
 		StructuredBuffer shadowMarker;//replace with a push constant
 		//consider fusing these two
 		StructuredBuffer clusterAABB;
@@ -108,15 +108,16 @@ namespace Pistachio {
 		StructuredBuffer sparseActiveClustersBuffer_lightIndices;
 		StructuredBuffer lightList;
 		StructuredBuffer lightGrid;
-		SetInfo passCBinfoGFX[RendererBase::numFramesInFlight];
-		SetInfo passCBinfoCMP[RendererBase::numFramesInFlight];
-		SetInfo passCBinfoVS_PS[RendererBase::numFramesInFlight];
-		SetInfo buildClusterInfo;
-		SetInfo activeClusterInfo;
-		SetInfo tightenListInfo;
-		SetInfo cullLightsInfo;
-		SetInfo sceneInfo;
-		SetInfo shadowSetInfo;
+		ResourceSet passCBinfoGFX[RendererBase::numFramesInFlight];
+		ResourceSet passCBinfoCMP[RendererBase::numFramesInFlight];
+		ResourceSet passCBinfoVS_PS[RendererBase::numFramesInFlight];
+		ResourceSet buildClusterInfo;
+		ResourceSet activeClusterInfo;
+		ResourceSet tightenListInfo;
+		ResourceSet cullLightsInfo;
+		ResourceSet sceneInfo;
+		ResourceSet shadowSetInfo;
+		ResourceSet backgroundInfo;
 		DepthTexture shadowMapAtlas;
 		DepthTexture zPrepass;
 		RenderTexture finalRender;

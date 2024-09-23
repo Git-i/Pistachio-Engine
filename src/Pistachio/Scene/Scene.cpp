@@ -23,6 +23,8 @@
 
 #endif // IMGUI
 
+#include <Pistachio/Renderer/Skybox.h>
+
 #include "ScriptableComponent.h"
 #include "Pistachio/Physics/Physics.h"
 #include "Pistachio/Renderer/MeshFactory.h"
@@ -102,14 +104,24 @@ static DirectX::XMMATRIX GetLightMatrixFromCamera(const DirectX::XMMATRIX& camVi
 }
 static const uint32_t clusterAABBsize = ((sizeof(float) * 4) * 2);
 namespace Pistachio {
-
+	void OnMeshRendererAdded(entt::registry & reg, entt::entity e)
+	{
+		MeshRendererComponent& component = reg.get<MeshRendererComponent>(e);
+		TransformData td;
+		td.transform = Matrix4::Identity;
+		td.normal = Matrix4::Identity;
+		component.handle =  Renderer::AllocateConstantBuffer(sizeof(TransformData));
+		Renderer::FullCBUpdate(component.handle, &td);
+	}
 	Scene::Scene(SceneDesc desc) : sm_allocator({ 4096, 4096 }, { 256, 256 })
 	{
+		MeshFactory::CreateCube();
 		PT_PROFILE_FUNCTION();
 		using namespace DirectX;
 		AssetManager* assetMan = GetAssetManager();
 		root = CreateRootEntity(UUID());
-		ScreenSpaceQuad = MeshFactory::CreatePlane();
+
+		m_Registry.on_construct<MeshRendererComponent>().connect<&OnMeshRendererAdded>();
 		RHI::UVector2D resolution = { (uint32_t)desc.Resolution.x, (uint32_t)desc.Resolution.y };
 		sceneResolution[0] = resolution.x;
 		sceneResolution[1] = resolution.y;
@@ -137,7 +149,7 @@ namespace Pistachio {
 		ComputeShader* shd_tightenList = Renderer::GetBuiltinComputeShader("Tighten Clusters");
 		ComputeShader* shd_cullLights = Renderer::GetBuiltinComputeShader("Cull Lights");
 		Shader* shd_prepass = Renderer::GetBuiltinShader("Z-Prepass");
-		const Shader* shd_fwd = &assetMan->GetShaderResource(*assetMan->GetAsset("Default Shader"))->GetShader();
+		const Shader* shd_fwd = &assetMan->GetResource<ShaderAsset>(*assetMan->GetAsset("Default Shader"))->GetShader();
 		Shader* shd_Shadow = Renderer::GetBuiltinShader("Shadow Shader");
 		Shader* shd_background = Renderer::GetBuiltinShader("Background Shader");
 		for (uint32_t i = 0; i < RendererBase::numFramesInFlight; i++)
@@ -170,6 +182,10 @@ namespace Pistachio {
 		sceneInfo.UpdateSamplerBinding(Renderer::GetDefaultSampler(), 7);
 		sceneInfo.UpdateSamplerBinding(Renderer::GetDefaultSampler(), 8);
 		sceneInfo.UpdateSamplerBinding(Renderer::GetShadowSampler(), 9);
+
+		shd_background->GetShaderBinding(backgroundInfo, 1);
+		backgroundInfo.UpdateTextureBinding(Renderer::GetDefaultCubeMap().GetView(), 0);
+		backgroundInfo.UpdateSamplerBinding(Renderer::GetDefaultSampler(), 1);
 
 		shd_Shadow->GetShaderBinding(shadowSetInfo, 1);
 		shadowSetInfo.UpdateBufferBinding(lightList.GetID(), 0, lightListSize, RHI::DescriptorType::StructuredBuffer, 0);
@@ -260,7 +276,7 @@ namespace Pistachio {
 					for (auto entity : meshesToDraw)
 					{
 						auto& meshc = m_Registry.get<MeshRendererComponent>(entity);
-						const Model* model = assetMan->GetModelResource(meshc.Model);
+						const Model* model = assetMan->GetResource<Model>(meshc.Model);
 						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 						Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
@@ -319,7 +335,7 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							const Model* model = assetMan->GetModelResource(meshc.Model);
+							const Model* model = assetMan->GetResource<Model>(meshc.Model);
 							if(!model) continue;
 							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
@@ -395,7 +411,7 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							const Model* model = assetMan->GetModelResource(meshc.Model);
+							const auto* model = assetMan->GetResource<Model>(meshc.Model);
 							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 							Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
@@ -525,11 +541,11 @@ namespace Pistachio {
 					for (auto entity : meshesToDraw)
 					{
 						auto& meshc = m_Registry.get<MeshRendererComponent>(entity);
-						const Material* mtl = assetMan->GetMaterialResource(meshc.material);
+						const auto* mtl = assetMan->GetResource<Material>(meshc.material);
 						mtl->Bind(list);
 						Renderer::FullCBUpdate(mtl->parametersBuffer, mtl->parametersBufferCPU);
-						const Shader& shd = assetMan->GetShaderResource(mtl->GetShader())->GetShader();
-						const Model* model = assetMan->GetModelResource(meshc.Model);
+						const Shader& shd = assetMan->GetResource<ShaderAsset>(mtl->GetShader())->GetShader();
+						const auto* model = assetMan->GetResource<Model>(meshc.Model);
 						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						shd.ApplyBinding(list, passCBinfoVS_PS[RendererBase::GetCurrentFrameIndex()]);
 						shd.ApplyBinding(list, sceneInfo);
@@ -571,8 +587,8 @@ namespace Pistachio {
 				cb_info.setIndex = 0;
 				shader->ApplyBinding(list, passCBinfoGFX[RendererBase::GetCurrentFrameIndex()]);
 				cb_info.setIndex = old_ind;
-				//shader->ApplyBinding(list, Renderer::backgroundInfo);
-				//Renderer::Submit(list, Renderer::cube.GetVBHandle(), Renderer::cube.GetIBHandle(), sizeof(Vertex));
+				shader->ApplyBinding(list, backgroundInfo);
+				Renderer::Submit(list, Renderer::UnitCube()->GetVBHandle(), Renderer::UnitCube()->GetIBHandle(), sizeof(Vertex));
 			};
 		}
 		graph.Compile();
@@ -582,8 +598,6 @@ namespace Pistachio {
 	}
 	Scene::~Scene()
 	{
-		//finish all operations on the scene and it resources
-		delete ScreenSpaceQuad;
 	}
 	Entity Scene::CreateRootEntity(UUID ID)
 	{
@@ -635,6 +649,17 @@ namespace Pistachio {
 		child.parentID = new_parent;
 		new_tree.chilren.push_back(e);
 	}
+
+	void Scene::SyncSkybox()
+	{
+		auto& env = m_Registry.get<EnvironmentComponent>(root);
+		auto skybox = GetAssetManager()->GetResource<Skybox>(env.skybox);
+		sceneInfo.UpdateTextureBinding(skybox->Irradiance()->GetView(), 1);
+		sceneInfo.UpdateTextureBinding(skybox->SpecularPrefiltered()->GetView(), 2);
+
+		backgroundInfo.UpdateTextureBinding(skybox->Base()->GetView(), 0);
+	}
+
 	Entity Scene::CreateEntityWithUUID(UUID ID, const std::string& name)
 	{
 		Entity entity = { m_Registry.create(), this };
@@ -922,7 +947,7 @@ namespace Pistachio {
 		for (auto entity : mesh_transform)
 		{
 			auto [mesh, transform] = mesh_transform.get(entity);
-			const Model* model = GetAssetManager()->GetModelResource(mesh.Model);
+			const auto* model = GetAssetManager()->GetResource<Model>(mesh.Model);
 			if (model)
 			{
 				BoundingBox box = model->aabbs[mesh.modelIndex];
@@ -1020,74 +1045,6 @@ namespace Pistachio {
 			}
 		}
 	}
-	
-	
-	template<typename T>
-	void OnComponentAdded(Entity entity, T& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<TransformComponent>(Entity entity, TransformComponent& component)
-	{
-		
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<TagComponent>(Entity entity, TagComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<CameraComponent>(Entity entity, CameraComponent& component)
-	{
-		//component.camera.SetViewportSize(m_viewportWidth, m_ViewportHeight);
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<MeshRendererComponent>(Entity entity, MeshRendererComponent& component)
-	{
-		TransformData td;
-		td.transform = Matrix4::Identity;
-		td.normal = Matrix4::Identity;
-		component.handle =  Renderer::AllocateConstantBuffer(sizeof(TransformData));
-		Renderer::FullCBUpdate(component.handle, &td);
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<NativeScriptComponent>(Entity entity, NativeScriptComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<IDComponent>(Entity entity, IDComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<LightComponent>(Entity entity, LightComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<RigidBodyComponent>(Entity entity, RigidBodyComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<BoxColliderComponent>(Entity entity, BoxColliderComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<SphereColliderComponent>(Entity entity, SphereColliderComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<CapsuleColliderComponent>(Entity entity, CapsuleColliderComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<PlaneColliderComponent>(Entity entity, PlaneColliderComponent& component)
-	{
-	}
-	template<>
-	void PISTACHIO_API Scene::OnComponentAdded<HierarchyComponent>(Entity entity, HierarchyComponent& component)
-	{
-	}
+
 
 }

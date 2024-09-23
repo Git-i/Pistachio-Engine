@@ -75,7 +75,7 @@ namespace Pistachio {
 		m_VertexBuffer = Renderer::AllocateVertexBuffer((uint32_t)(sizeof(Vertex) * m_vertices.size()), m_vertices.data());
 		m_IndexBuffer = Renderer::AllocateIndexBuffer((uint32_t)(sizeof(unsigned int) * m_indices.size()), m_indices.data());
 	}
-	Mesh::Mesh(const std::vector<Vertex>&& vertices, const std::vector<unsigned int>&& indices)
+	Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices)
 	{
 		PT_PROFILE_FUNCTION();
 		m_vertices = vertices;

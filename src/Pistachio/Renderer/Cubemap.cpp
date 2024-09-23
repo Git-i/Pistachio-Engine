@@ -107,7 +107,7 @@ namespace Pistachio
             .AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_WRITE,
             .oldLayout = RHI::ResourceLayout::UNDEFINED,
             .newLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL,
-            .texture = ID,
+            .texture = tex,
             .previousQueue = RHI::QueueFamily::Ignored,
             .nextQueue = RHI::QueueFamily::Ignored,
             .subresourceRange{
@@ -142,10 +142,10 @@ namespace Pistachio
             }
         }
 
-        barr.AccessFlagsBefore = RHI::ResourceAcessFlags::NONE;
-        barr.AccessFlagsAfter = RHI::ResourceAcessFlags::TRANSFER_WRITE;
-        barr.oldLayout = RHI::ResourceLayout::UNDEFINED;
-        barr.newLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL;
+        barr.AccessFlagsBefore = RHI::ResourceAcessFlags::TRANSFER_WRITE;
+        barr.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
+        barr.oldLayout = RHI::ResourceLayout::TRANSFER_DST_OPTIMAL;
+        barr.newLayout = RHI::ResourceLayout::SHADER_READ_ONLY_OPTIMAL;
         RendererBase::GetStagingCommandList()->PipelineBarrier(RHI::PipelineStage::TRANSFER_BIT, RHI::PipelineStage::FRAGMENT_SHADER_BIT, {}, {&barr,1});
 
         ID = tex;

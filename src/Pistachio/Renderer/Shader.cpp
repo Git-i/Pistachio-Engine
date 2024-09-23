@@ -315,18 +315,18 @@ namespace Pistachio {
 
 
 
-	void Shader::GetShaderBinding(SetInfo& info, uint32_t setIndex) const
+	void Shader::GetShaderBinding(ResourceSet& info, uint32_t setIndex) const
 	{
 		uint32_t index = UINT32_MAX;
 		for (uint32_t i = 0; i < m_infos.sets.size(); i++)
 		{
 			if (m_infos.sets[i].setIndex == setIndex) index = i;
 		}
-		info = m_infos.sets[index];
+		info.setIndex = m_infos.sets[index].setIndex;
 		info.set = RendererBase::CreateDescriptorSet(layouts[index]);
 	}
 
-	void Shader::ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list,const SetInfo& info) const
+	void Shader::ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list,const ResourceSet& info) const
 	{
 		list->BindDescriptorSet(info.set, info.setIndex);
 	}
@@ -425,7 +425,6 @@ namespace Pistachio {
 			{
 				auto& s = m_infos.sets.emplace_back();
 				s.setIndex = i.descriptorTable.setIndex;
-				s.set = nullptr;
 				s.count.reserve(i.descriptorTable.ranges.size());
 				s.slot.reserve(i.descriptorTable.ranges.size());
 				s.stage.reserve(i.descriptorTable.ranges.size());
@@ -479,7 +478,7 @@ namespace Pistachio {
 
 
 
-	void SetInfo::UpdateBufferBinding(RHI::Weak<RHI::Buffer> buff, uint32_t offset, uint32_t size, RHI::DescriptorType type, uint32_t slot)
+	void ResourceSet::UpdateBufferBinding(RHI::Weak<RHI::Buffer> buff, uint32_t offset, uint32_t size, RHI::DescriptorType type, uint32_t slot)
 	{
 		RHI::DescriptorBufferInfo info;
 		info.buffer = buff;
@@ -497,7 +496,7 @@ namespace Pistachio {
 		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
 
-	void SetInfo::UpdateBufferBinding(const BufferBindingUpdateDesc& desc, uint32_t slot)
+	void ResourceSet::UpdateBufferBinding(const BufferBindingUpdateDesc& desc, uint32_t slot)
 	{
 		RHI::DescriptorBufferInfo info{
 			.buffer = desc.buffer,
@@ -515,7 +514,7 @@ namespace Pistachio {
 		};
 		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
-	void SetInfo::UpdateTextureBinding(RHI::Weak<RHI::TextureView> desc, uint32_t slot, RHI::DescriptorType type)
+	void ResourceSet::UpdateTextureBinding(RHI::Weak<RHI::TextureView> desc, uint32_t slot, RHI::DescriptorType type)
 	{
 		RHI::DescriptorTextureInfo info{.texture = desc};
 		std::array updateDesc{
@@ -529,7 +528,7 @@ namespace Pistachio {
 		};
 		RendererBase::GetDevice()->UpdateDescriptorSet(updateDesc, set);
 	}
-	void SetInfo::UpdateSamplerBinding(SamplerHandle handle, uint32_t slot)
+	void ResourceSet::UpdateSamplerBinding(SamplerHandle handle, uint32_t slot)
 	{
 		RHI::DescriptorSamplerInfo info{.heapHandle = RendererBase::GetCPUHandle(handle)};
 		std::array updateDesc{
@@ -571,18 +570,18 @@ namespace Pistachio {
 		list->SetComputePipeline(pipeline);
 	}
 
-	void ComputeShader::GetShaderBinding(SetInfo& info, uint32_t setIndex)
+	void ComputeShader::GetShaderBinding(ResourceSet& info, uint32_t setIndex)
 	{
 		uint32_t index = UINT32_MAX;
 		for (uint32_t i = 0; i < m_info.sets.size(); i++)
 		{
 			if (m_info.sets[i].setIndex == setIndex) index = i;
 		}
-		info = m_info.sets[index];
+		info.setIndex = m_info.sets[index].setIndex;
 		info.set = RendererBase::CreateDescriptorSet(layouts[index]);
 	}
 
-	void ComputeShader::ApplyShaderBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info)
+	void ComputeShader::ApplyShaderBinding(RHI::Weak<RHI::GraphicsCommandList> list, const ResourceSet& info)
 	{
 		list->BindComputeDescriptorSet(info.set, info.setIndex);
 	}
@@ -624,7 +623,6 @@ namespace Pistachio {
 		{
 			auto& set = m_info.sets.emplace_back();
 			set.setIndex = sets[i].setIndex;
-			set.set = nullptr;
 			std::vector<RHI::SRDescriptorBinding> bindings(sets[i].bindingCount);
 			reflection->GetDescriptorSetBindings(&sets[i], bindings.data());
 			for (uint32_t j = 0; j < sets[i].bindingCount; j++)

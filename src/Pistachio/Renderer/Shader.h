@@ -156,15 +156,9 @@ namespace Pistachio {
 		uint32_t offset;
 		uint32_t size;
 	};
-	struct PISTACHIO_API SetInfo
+	struct PISTACHIO_API ResourceSet
 	{
-		// provide binding slot, count and type of each Binding
-		std::vector<uint32_t> slot;
-		std::vector<RHI::DescriptorType> type;
-		std::vector<uint32_t> count;
-		std::vector<RHI::ShaderStage> stage;
-
-		std::uint32_t setIndex;
+		uint32_t setIndex;
 		RHI::Ptr<RHI::DescriptorSet> set;
 		void UpdateBufferBinding(RHI::Weak<RHI::Buffer> buff, uint32_t offset, uint32_t size, RHI::DescriptorType type, uint32_t slot);
 		void UpdateBufferBinding(const BufferBindingUpdateDesc& desc, uint32_t slot);
@@ -175,7 +169,16 @@ namespace Pistachio {
 	struct  ShaderSetInfos
 	{
 		// we have a bunch of dsets from the shader, and info on how to populate them??
-		std::vector<SetInfo> sets;
+		struct SetDescription
+		{
+			std::vector<uint32_t> slot;
+			std::vector<RHI::DescriptorType> type;
+			std::vector<uint32_t> count;
+			std::vector<RHI::ShaderStage> stage;
+
+			std::uint32_t setIndex;
+		};
+		std::vector<SetDescription> sets;
 		
 	};
 	
@@ -185,8 +188,8 @@ namespace Pistachio {
 		ComputeShader() {};
 		void Bind(RHI::Weak<RHI::GraphicsCommandList> list);
 		static ComputeShader* Create(const RHI::ShaderCode& code, RHI::ShaderMode mode);
-		void GetShaderBinding(SetInfo& info, uint32_t setIndex);
-		void ApplyShaderBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info);
+		void GetShaderBinding(ResourceSet& info, uint32_t setIndex);
+		void ApplyShaderBinding(RHI::Weak<RHI::GraphicsCommandList> list, const ResourceSet& info);
 		static ComputeShader* CreateWithRs(const RHI::ShaderCode& code, RHI::ShaderMode mode, RHI::Ptr<RHI::RootSignature> rSig);
 	private:
 		friend class ComputePass;
@@ -211,8 +214,8 @@ namespace Pistachio {
 		void GetRasterizerMode(const RHI::RasterizerMode& mode);
 		uint32_t SetRasterizerMode(const RHI::RasterizerMode& mode, ShaderModeSetFlags flags);
 		void GetBlendMode(const RHI::BlendMode& mode);
-		void GetShaderBinding(SetInfo& info, uint32_t setIndex) const;
-		void ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list, const SetInfo& info) const;
+		void GetShaderBinding(ResourceSet& info, uint32_t setIndex) const;
+		void ApplyBinding(RHI::Weak<RHI::GraphicsCommandList> list, const ResourceSet& info) const;
 		RHI::Ptr<RHI::RootSignature> GetRootSignature() { return rootSig; };
 		uint32_t SetBlendMode(const RHI::BlendMode& mode, ShaderModeSetFlags flags);
 		RHI::Ptr<RHI::PipelineStateObject> GetCurrentPipeline() { return PSOs[currentPSO]; }
