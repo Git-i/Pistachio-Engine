@@ -19,7 +19,7 @@
 #include "Pistachio/Core/Application.h"
 
 namespace Pistachio {
-	inline static Renderer& Self()
+	static Renderer& Self()
 	{
 		return Application::Get().GetRenderer();
 	}
@@ -257,7 +257,7 @@ namespace Pistachio {
 		return Self().ctx.defaultSampler.Get();
 	}
 
-	void Pistachio::Renderer::Submit(RHI::Weak<RHI::GraphicsCommandList> list,const RendererVBHandle vb, const RendererIBHandle ib, uint32_t vertexStride)
+	void Renderer::Submit(RHI::Weak<RHI::GraphicsCommandList> list,const RendererVBHandle vb, const RendererIBHandle ib, uint32_t vertexStride)
 	{
 		list->DrawIndexed(ib.size / sizeof(uint32_t),
 			1,

@@ -251,7 +251,7 @@ namespace Pistachio
 
 
 		BrdfTex.CreateStack(512, 512, RHI::Format::R16G16_FLOAT, nullptr PT_DEBUG_REGION(,"Renderer -> White Texture"),TextureFlags::Compute);
-		ComputeShader* brdfShader = ComputeShader::Create({shader_dir + "BRDF_LUT_cs.rbc" },RHI::ShaderMode::File);
+		auto brdfShader = std::unique_ptr<ComputeShader>(ComputeShader::Create({shader_dir + "BRDF_LUT_cs.rbc" },RHI::ShaderMode::File));
 
 		ShaderDesc.DepthStencilModes->DepthWriteMask = RHI::DepthWriteMask::None;
 		ShaderDesc.RasterizerModes->cullMode = RHI::CullMode::None;
@@ -290,6 +290,8 @@ namespace Pistachio
 		barr.AccessFlagsBefore = RHI::ResourceAcessFlags::SHADER_WRITE;
 		barr.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
 		RendererBase::GetMainCommandList()->PipelineBarrier(RHI::PipelineStage::COMPUTE_SHADER_BIT, RHI::PipelineStage::FRAGMENT_SHADER_BIT, {}, {&barr,1});
+    	RendererBase::EndFrame();
+    	RendererBase::Get().mainFence->Wait(RendererBase::Get().currentFenceVal);
 
 		auto err = defaultCubemap.Initialize(1, 1, RHI::Format::R8G8B8A8_UNORM);
 		if(!err.Successful())

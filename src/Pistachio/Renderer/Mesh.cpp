@@ -25,63 +25,59 @@ void ProcessIndices(const aiMesh* pMesh, std::vector<unsigned int>& indices)
 	}
 }
 namespace Pistachio {
-	Result<Mesh*> Mesh::Create(const char* filepath, std::uint32_t index)
+	Result<Mesh*> Mesh::Create(const char* filepath, const std::uint32_t index)
 	{
 		PT_PROFILE_FUNCTION();
-		Mesh* result = new Mesh;
-		auto err = result->CreateStack(filepath, index);
-		if(err.GetErrorType() != ErrorType::Success)
-		{
-			delete result;
+		auto result = std::make_unique<Mesh>();
+		if(auto err = result->CreateStack(filepath, index); !err.Successful())
 			return ezr::err(std::move(err));
-		}
-		return ezr::ok(std::move(result));
+		return ezr::ok(result.release());
 	}
-	Error Mesh::CreateStack(const char* filepath, std::uint32_t index)
+	Error Mesh::CreateStack(const char* filepath, const std::uint32_t index)
 	{
 		PT_PROFILE_FUNCTION();
 		m_vertices.clear();
 		m_indices.clear();
 		PT_CORE_INFO("Loading Mesh {0}", filepath);
 		if(!Pistachio::Error::CheckFileExistence(filepath))
-			return Error(ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + filepath);
+			return {ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + filepath};
 		Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
 		Assimp::Importer imp;
 		const aiScene* pScene = imp.ReadFile(filepath, aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded);
 		
 		Assimp::DefaultLogger::kill();
-		const aiMesh* pmeshes = pScene->mMeshes[index];
-		m_vertices.reserve(pmeshes->mNumVertices);
-		m_indices.reserve(pmeshes->mNumFaces * 3);	
-		std::thread worker(ProcessIndices, (pmeshes), std::ref(m_indices));
-		for (unsigned int j = 0; j < pmeshes->mNumVertices; j++)
+		const aiMesh* p_meshes = pScene->mMeshes[index];
+		m_vertices.reserve(p_meshes->mNumVertices);
+		m_indices.reserve(p_meshes->mNumFaces * 3);
+		std::thread worker(ProcessIndices, (p_meshes), std::ref(m_indices));
+		for (unsigned int j = 0; j < p_meshes->mNumVertices; j++)
 		{
 			auto& vert = m_vertices.emplace_back();
-			vert.position =	{pmeshes->mVertices[j].x, pmeshes->mVertices[j].y, pmeshes->mVertices[j].z};
-			if(pmeshes->HasNormals())vert.normal={pmeshes->mNormals[j].x, pmeshes->mNormals[j].y, pmeshes->mNormals[j].z};
-			if(pmeshes->HasTextureCoords(0))vert.TexCoord={pmeshes->mTextureCoords[0][j].x, pmeshes->mTextureCoords[0][j].y};
+			vert.position =	{p_meshes->mVertices[j].x, p_meshes->mVertices[j].y, p_meshes->mVertices[j].z};
+			if(p_meshes->HasNormals())vert.normal={p_meshes->mNormals[j].x, p_meshes->mNormals[j].y, p_meshes->mNormals[j].z};
+			if(p_meshes->HasTextureCoords(0))vert.TexCoord={p_meshes->mTextureCoords[0][j].x, p_meshes->mTextureCoords[0][j].y};
 		}
 		worker.join();
-		m_VertexBuffer = Renderer::AllocateVertexBuffer(sizeof(Vertex) * pmeshes->mNumVertices, m_vertices.data());
-		m_IndexBuffer = Renderer::AllocateIndexBuffer(sizeof(unsigned int) * pmeshes->mNumFaces * 3, m_indices.data());
+		m_VertexBuffer = Renderer::AllocateVertexBuffer(sizeof(Vertex) * p_meshes->mNumVertices, m_vertices.data());
+		m_IndexBuffer = Renderer::AllocateIndexBuffer(sizeof(unsigned int) * p_meshes->mNumFaces * 3, m_indices.data());
 		imp.FreeScene();
-		return Error(Pistachio::ErrorType::Success, "NO ERROR");
+		return {ErrorType::Success, "NO ERROR"};
 	}
 	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices)
 	{
 		PT_PROFILE_FUNCTION();
 		m_vertices = vertices;
 		m_indices = indices;
-		m_VertexBuffer = Renderer::AllocateVertexBuffer((uint32_t)(sizeof(Vertex) * m_vertices.size()), m_vertices.data());
-		m_IndexBuffer = Renderer::AllocateIndexBuffer((uint32_t)(sizeof(unsigned int) * m_indices.size()), m_indices.data());
+		m_VertexBuffer = Renderer::AllocateVertexBuffer(static_cast<uint32_t>(sizeof(Vertex) * m_vertices.size()), m_vertices.data());
+		m_IndexBuffer = Renderer::AllocateIndexBuffer(static_cast<uint32_t>(sizeof(unsigned int) * m_indices.size()), m_indices.data());
 	}
 	Mesh::Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices)
 	{
 		PT_PROFILE_FUNCTION();
 		m_vertices = vertices;
 		m_indices = indices;
-		m_VertexBuffer = Renderer::AllocateVertexBuffer((uint32_t)(sizeof(Vertex) * m_vertices.size()), m_vertices.data());
-		m_IndexBuffer = Renderer::AllocateIndexBuffer((uint32_t)(sizeof(unsigned int) * m_indices.size()), m_indices.data());
+		m_VertexBuffer = Renderer::AllocateVertexBuffer(static_cast<uint32_t>(sizeof(Vertex) * m_vertices.size()), m_vertices.data());
+		m_IndexBuffer = Renderer::AllocateIndexBuffer(static_cast<uint32_t>(sizeof(unsigned int) * m_indices.size()), m_indices.data());
 	}
 	Mesh::~Mesh()
 	{

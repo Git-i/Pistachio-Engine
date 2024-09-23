@@ -135,6 +135,7 @@ namespace Pistachio {
 		static const constexpr uint32_t numFramesInFlight = 3;
 	private:
 		friend class Renderer;
+		friend class RendererContext;
 		friend class Texture2D;
 		friend class RenderGraph;
 		friend class DepthTexture;

@@ -17,7 +17,7 @@ namespace Pistachio {
         std::vector<BoundingBox> aabbs;
         
 
-        static Result<Model*> Create(const char* path);
+        [[nodiscard]] static Result<Model*> Create(const char* path);
     private:
         // loads a model with supported ASSIMP extensions from file and stores the resulting meshes in the meshes vector.
         Error loadModel(const char* path);

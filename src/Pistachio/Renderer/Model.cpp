@@ -4,42 +4,31 @@
 #include "../Core/Log.h"
 #include "assimp/DefaultLogger.hpp"
 #include "../Core/Error.h"
-/*
- * Most of the code here is from https://www.learnopengl.com
- * It's not that i can't write it, i just didnt feel like
- * Ill probably get to optimize/potentially rewrite it later on
-*/
+
 namespace Pistachio {
     Result<Model*> Model::Create(const char* path)
     {
-        Model* md = new Model;
-        auto e = md->loadModel(path);
-        if(e.GetErrorType() != ErrorType::Success)
-        {
-            delete md;
+        auto md = std::make_unique<Model>();
+        if(auto e = md->loadModel(path); !e.Successful())
             return ezr::err(std::move(e));
-        }
-        else
-        {
-            return ezr::ok(std::move(md));
-        }
+        return ezr::ok(md.release());
     }
     Error Model::loadModel(const char* path)
     {
         PT_PROFILE_FUNCTION();
         PT_CORE_INFO("Loading Model {0}", path);
-        if (!Pistachio::Error::CheckFileExistence(path))
-            return Error(ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + path);
+        if (!Error::CheckFileExistence(path))
+            return {ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + path};
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded | aiProcess_GenBoundingBoxes);
         if (!scene)
         {
             PT_CORE_ERROR(importer.GetErrorString());
-            return Error(ErrorType::Unknown, std::string(__FUNCTION__));
+            return {ErrorType::Unknown, std::string(__FUNCTION__)};
         }
         // process ASSIMP's root node recursively
         processNode(scene->mRootNode, scene);
-        return Error(ErrorType::Success, std::string(__FUNCTION__));
+        return {ErrorType::Success, std::string(__FUNCTION__)};
     }
     void Model::processNode(aiNode* node, const aiScene* scene)
     {
@@ -52,7 +41,7 @@ namespace Pistachio {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             processMesh(mesh, scene);
         }
-        // after we've processed all of the meshes (if any) we then recursively process each of the children nodes
+        // after we've processed all the meshes (if any) we then recursively process each of the children nodes
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
             processNode(node->mChildren[i], scene);

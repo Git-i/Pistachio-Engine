@@ -315,7 +315,7 @@ namespace Pistachio {
 			// or make a larger buffer temporarily, or better expand the staging buffer
 			return;
 		}
-		uint8_t* stagingBufferPointer = static_cast<uint8_t*>(base.stagingBuffer->Map().value());
+		auto stagingBufferPointer = static_cast<uint8_t*>(base.stagingBuffer->Map().value());
 		stagingBufferPointer += requiredOffset; //offset by the amount of bytes already used
 		memcpy(stagingBufferPointer, data, size);
 		base.stagingBuffer->UnMap();
