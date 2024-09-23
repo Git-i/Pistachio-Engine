@@ -278,8 +278,7 @@ namespace Pistachio {
 			//split updates into portions and return from function
 			// or make a larger buffer temporarily, or better expand the staging buffer
 		}
-		void* stagingBufferPointer;
-		base.stagingBuffer->Map(&stagingBufferPointer);
+		uint8_t* stagingBufferPointer = static_cast<uint8_t*>(base.stagingBuffer->Map().value());
 		stagingBufferPointer = ((std::uint8_t*)stagingBufferPointer) + base.staginBufferPortionUsed; //offset by the amount of bytes already used
 		memcpy(stagingBufferPointer, data, size);
 		base.stagingBuffer->UnMap();
@@ -288,7 +287,7 @@ namespace Pistachio {
 		base.outstandingResourceUpdate = true;
 	}
 
-	void RendererBase::PushTextureUpdate(RHI::Weak<RHI::Texture> texture, uint32_t size ,const void* data,RHI::SubResourceRange* range, RHI::Extent3D imageExtent, RHI::Offset3D imageOffset,RHI::Format format)
+	void RendererBase::PushTextureUpdate(RHI::Weak<RHI::Texture> texture, uint32_t size ,const void* data,const RHI::SubResourceLayers& range, RHI::Extent3D imageExtent, RHI::Offset3D imageOffset,RHI::Format format)
 	{
 		auto& base = Application::Get().GetRendererBase();
 		PT_CORE_ASSERT((size % (imageExtent.width * imageExtent.height)) == 0);
@@ -316,12 +315,11 @@ namespace Pistachio {
 			// or make a larger buffer temporarily, or better expand the staging buffer
 			return;
 		}
-		void* stagingBufferPointer;
-		base.stagingBuffer->Map(&stagingBufferPointer);
-		stagingBufferPointer = ((std::uint8_t*)stagingBufferPointer) + requiredOffset; //offset by the amount of bytes already used
+		uint8_t* stagingBufferPointer = static_cast<uint8_t*>(base.stagingBuffer->Map().value());
+		stagingBufferPointer += requiredOffset; //offset by the amount of bytes already used
 		memcpy(stagingBufferPointer, data, size);
 		base.stagingBuffer->UnMap();
-		base.stagingCommandList->CopyBufferToImage(requiredOffset, *range, imageOffset, imageExtent, base.stagingBuffer, texture);
+		base.stagingCommandList->CopyBufferToImage(requiredOffset, range, imageOffset, imageExtent, base.stagingBuffer, texture);
 		base.staginBufferPortionUsed = size + requiredOffset;
 		base.outstandingResourceUpdate = true;
 	}

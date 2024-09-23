@@ -111,7 +111,7 @@ namespace Pistachio {
 		static RHI::CPU_HANDLE GetCPUHandle(DSVHandle handle);
 		static RHI::CPU_HANDLE GetCPUHandle(SamplerHandle handle);
 		static void PushBufferUpdate(RHI::Weak<RHI::Buffer> buffer, uint32_t offsetFromBufferStart,const void* data, uint32_t size);
-		static void PushTextureUpdate(RHI::Weak<RHI::Texture> texture, uint32_t imgByteSize,const void* data,RHI::SubResourceRange* range, RHI::Extent3D imageExtent, RHI::Offset3D imageOffset,RHI::Format format);
+		static void PushTextureUpdate(RHI::Weak<RHI::Texture> texture, uint32_t imgByteSize,const void* data,const RHI::SubResourceLayers& range, RHI::Extent3D imageExtent, RHI::Offset3D imageOffset,RHI::Format format);
 		static RHI::Ptr<RHI::DescriptorSet> CreateDescriptorSet(RHI::Ptr<RHI::DescriptorSetLayout> layout);
 		static void FlushStagingBuffer();
 		static void FlushGPU();

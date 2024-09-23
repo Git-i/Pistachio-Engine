@@ -343,7 +343,7 @@ namespace Pistachio {
 							{
 								list->SetViewports(1, &vp[i]);
 								offset_cascade[1] = i;
-								list->PushConstant(1,2,offset_cascade,0);
+								list->PushConstants(1,2,offset_cascade,0);
 								Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
 							}
 						}
@@ -403,7 +403,7 @@ namespace Pistachio {
 						shd->ApplyBinding(list, shadowSetInfo);
 						list->SetScissorRects(1, &rect);
 						uint32_t offset[2] = {baseOffset + (index * offsetMul),0};
-						list->PushConstant(1,2,offset,0);
+						list->PushConstants(1,2,offset,0);
 						auto meshes = m_Registry.view<MeshRendererComponent>();
 						rbDesc.renderingArea = { {(int)light.shadowMap.offset.x,(int)light.shadowMap.offset.y},
 							{light.shadowMap.size.x, light.shadowMap.size.y} };

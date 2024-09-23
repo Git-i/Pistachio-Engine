@@ -57,7 +57,13 @@ namespace Pistachio
                 RHI::PipelineStage::TRANSFER_BIT,
                 {},
                 {&barrier,1});
-            RendererBase::PushTextureUpdate(m_ID, m_Width * m_Height * RHI::Util::GetFormatBPP(m_format), data, &range, {m_Width, m_Height,1}, {0,0,0},m_format); //todo image sizes
+            const auto layers = RHI::SubResourceLayers{
+                .imageAspect = RHI::Aspect::COLOR_BIT,
+                .IndexOrFirstMipLevel = 0,
+                .FirstArraySlice = 0,
+                .NumArraySlices = 1
+            };
+            RendererBase::PushTextureUpdate(m_ID, m_Width * m_Height * RHI::Util::GetFormatBPP(m_format), data, layers, {m_Width, m_Height,1}, {0,0,0},m_format); //todo image sizes
             barrier.AccessFlagsBefore = RHI::ResourceAcessFlags::TRANSFER_WRITE;
             barrier.AccessFlagsAfter = RHI::ResourceAcessFlags::SHADER_READ;
             barrier.newLayout = RHI::ResourceLayout::SHADER_READ_ONLY_OPTIMAL;

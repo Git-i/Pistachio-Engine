@@ -126,14 +126,13 @@ namespace Pistachio
                 for(auto face : std::views::iota(0u, texture.NumFaces()))
                 {
                     auto slice = layer * texture.NumFaces() + face;
-                    RHI::SubResourceRange range{
+                    RHI::SubResourceLayers layers{
                         .imageAspect = RHI::Aspect::COLOR_BIT,
                         .IndexOrFirstMipLevel = mip,
-                        .NumMipLevels = 1,
                         .FirstArraySlice = slice,
                         .NumArraySlices = 1
                     };
-                    RendererBase::PushTextureUpdate(tex, texture.ImageSize(mip), texture.Data(mip, layer, face).value(), &range, {
+                    RendererBase::PushTextureUpdate(tex, texture.ImageSize(mip), texture.Data(mip, layer, face).value(), layers, {
                         static_cast<uint32_t>(texture.BaseWidth()/std::pow(2, mip)),
                         static_cast<uint32_t>(texture.BaseHeight()/std::pow(2, mip)),
                         1

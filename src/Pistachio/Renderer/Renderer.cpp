@@ -138,10 +138,8 @@ namespace Pistachio {
 			RHI::AutomaticAllocationInfo allocInfo;
 			allocInfo.access_mode = RHI::AutomaticAllocationCPUAccessMode::Sequential;
 			RHI::Ptr<RHI::Buffer> newCB = RendererBase::GetDevice()->CreateBuffer(desc, 0, 0, &allocInfo, 0, RHI::ResourceType::Automatic).value();
-			void* writePtr;
-			void* readPtr;
-			newCB->Map(&writePtr);
-			Self().ctx.resources[i].transformBuffer.ID->Map(&readPtr);
+			void* writePtr = newCB->Map().value();
+			void* readPtr = Self().ctx.resources[i].transformBuffer.ID->Map().value();
 			memcpy(writePtr, readPtr, capacity);
 			Self().ctx.resources[i].transformBuffer.ID->UnMap();
 			newCB->UnMap();
@@ -200,19 +198,18 @@ namespace Pistachio {
 		RendererBase::Get().mainFence->Wait(RendererBase::Get().currentFenceVal);
 		auto block = Self().ctx.constantBufferAllocator.freeList.GetBlockPtr();
 		uint32_t nextFreeOffset = 0;
-		void *ptr1, *ptr2, *ptr3;
-		Self().ctx.resources[0].transformBuffer.ID->Map(&ptr1);
-		Self().ctx.resources[1].transformBuffer.ID->Map(&ptr2);
-		Self().ctx.resources[2].transformBuffer.ID->Map(&ptr3);
+		uint8_t* ptr1 = static_cast<uint8_t*>(Self().ctx.resources[0].transformBuffer.ID->Map().value());
+		uint8_t* ptr2 = static_cast<uint8_t*>(Self().ctx.resources[1].transformBuffer.ID->Map().value());
+		uint8_t* ptr3 = static_cast<uint8_t*>(Self().ctx.resources[2].transformBuffer.ID->Map().value());
 		while (block)
 		{
 			//if block has gap from last block
 			if (block->offset > nextFreeOffset)
 			{
 				//we use memmove to handle overlap possibility
-				memmove((uint8_t*)ptr1 + nextFreeOffset, (uint8_t*)ptr1 + block->offset, block->size);
-				memmove((uint8_t*)ptr2 + nextFreeOffset, (uint8_t*)ptr2 + block->offset, block->size);
-				memmove((uint8_t*)ptr3 + nextFreeOffset, (uint8_t*)ptr3 + block->offset, block->size);
+				memmove(ptr1 + nextFreeOffset, ptr1 + block->offset, block->size);
+				memmove(ptr2 + nextFreeOffset, ptr2 + block->offset, block->size);
+				memmove(ptr3 + nextFreeOffset, ptr3 + block->offset, block->size);
 				nextFreeOffset += block->size;
 			}
 			block = block->next;
