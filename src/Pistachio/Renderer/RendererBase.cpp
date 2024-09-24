@@ -35,7 +35,7 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		PT_PROFILE_FUNCTION();
 		if(auto wnd = Application::Get().GetWindow())
-		{
+		{			
 			wnd->GetSwapChain().BackBufferBarrier(
 				RHI::PipelineStage::TRANSFER_BIT,
 				RHI::PipelineStage::BOTTOM_OF_PIPE_BIT, 
@@ -250,7 +250,7 @@ namespace Pistachio {
 		PT_CORE_INFO("Done Initializing RHI");
 		s_device = device.Raw();
 		std::atexit(exit_handler);
-		return 0;
+		return true;
 	}
 	RHI::API RendererBase::GetAPI()
 	{

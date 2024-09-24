@@ -39,7 +39,7 @@ namespace Pistachio {
 		m_vertices.clear();
 		m_indices.clear();
 		PT_CORE_INFO("Loading Mesh {0}", filepath);
-		if(!Pistachio::Error::CheckFileExistence(filepath))
+		if(!std::filesystem::exists(filepath))
 			return {ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + filepath};
 		Assimp::DefaultLogger::create("", Assimp::Logger::VERBOSE, aiDefaultLogStream_STDOUT);
 		Assimp::Importer imp;

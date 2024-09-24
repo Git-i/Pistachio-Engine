@@ -17,7 +17,7 @@ namespace Pistachio {
     {
         PT_PROFILE_FUNCTION();
         PT_CORE_INFO("Loading Model {0}", path);
-        if (!Error::CheckFileExistence(path))
+        if (!std::filesystem::exists(path))
             return {ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + path};
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(path, aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded | aiProcess_GenBoundingBoxes);
