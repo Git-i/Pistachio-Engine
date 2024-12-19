@@ -2,7 +2,6 @@
 #include "Model.h"
 #include "assimp/Logger.hpp"
 #include "../Core/Log.h"
-#include "assimp/DefaultLogger.hpp"
 #include "../Core/Error.h"
 
 namespace Pistachio {

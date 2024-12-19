@@ -16,7 +16,6 @@
 #include "Util/FormatUtils.h"
 #include <cstdint>
 #include <vector>
-
 static const uint32_t STAGING_BUFFER_INITIAL_SIZE = 80 * 1024 * 1024; //todo: reduce this
 namespace Pistachio {
 	static RHI::Device* s_device = nullptr;
@@ -29,7 +28,7 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		base.mainFence->Wait(base.fence_vals[(base.currentFrameIndex+2)%3]);
 	}
-	
+
 	void RendererBase::EndFrame()
 	{
 		auto& base = Application::Get().GetRendererBase();
@@ -382,7 +381,7 @@ namespace Pistachio {
 	{
 		using return_t = UniqueHandle<RTVHandle, DestroyRenderTargetView>;
 		auto& base = Application::Get().GetRendererBase();
-		if (base.freeRTVs.size())
+		if (!base.freeRTVs.empty())
 		{
 			auto handle = base.freeRTVs[base.freeRTVs.size() - 1];
 			RHI::CPU_HANDLE CPUhandle{};
@@ -408,9 +407,10 @@ namespace Pistachio {
 		}
 		//no space in all heaps
 		auto& heap = base.rtvHeaps.emplace_back();
-		RHI::PoolSize pSize;
-		pSize.numDescriptors = 10;
-		pSize.type = RHI::DescriptorType::RTV;
+		RHI::PoolSize pSize {
+			.type = RHI::DescriptorType::RTV,
+			.numDescriptors = 10,
+		};
 		RHI::DescriptorHeapDesc hDesc;
 		hDesc.maxDescriptorSets = 10;//?
 		hDesc.numPoolSizes = 1;

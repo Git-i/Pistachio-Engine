@@ -132,7 +132,7 @@ namespace Pistachio {
 		static uint32_t GetCurrentFrameIndex();
 		static TraceRHI::Context& TraceContext();
 		static RendererBase& Get();
-		static const constexpr uint32_t numFramesInFlight = 3;
+		static constexpr uint32_t numFramesInFlight = 3;
 	private:
 		friend class Renderer;
 		friend class RendererContext;
@@ -142,7 +142,7 @@ namespace Pistachio {
 		friend class FrameComposer;
 		friend class Scene;
 		friend class SwapChain;
-		friend class SamplerHandle;
+		friend struct SamplerHandle;
 		TraceRHI::Context traceRHICtx;
 		RHI::Ptr<RHI::Device> device;
 		RHI::Ptr<RHI::GraphicsCommandList> mainCommandList;
