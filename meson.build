@@ -15,9 +15,6 @@ assimp_dep = dependency('assimp')
 
 glfw3_dep = dependency('glfw3')
 
-angelscript = subproject('angelscript')
-angelscript_dep = angelscript.get_variable('angelscript_dep')
-as_addons_dep = angelscript.get_variable('as_addons_dep')
 
 rhi = subproject('RHI')
 rhi_dep = rhi.get_variable('rhi_dep')
@@ -46,8 +43,6 @@ deps = [
     imgui_dep,
     spdlog_dep,
     xxhash_dep,
-    angelscript_dep,
-    as_addons_dep,
     pktx_dep,
     rhi_sc_dep,]
 
@@ -83,6 +78,7 @@ sources = [
     'src/Pistachio/Core/InputCallbacks.cpp',
     'src/Pistachio/Scene/CullingManager.cpp',
     'src/Pistachio/Scene/Scene.cpp',
+    'src/Pistachio/Scene/Components.cpp',
     'src/Pistachio/Scene/Entity.cpp',
     'src/Pistachio/Scene/SceneSerializer.cpp',
     'src/Pistachio/Renderer/ShaderAssetCompiler.cpp',
@@ -108,9 +104,6 @@ sources = [
     'src/Pistachio/Asset/AssetManager.cpp',
     'src/Pistachio/Physics/Physics.cpp',
     'src/Pistachio/Allocators/FreeList.cpp',
-    'src/Pistachio/Scripting/AngelScript/script_file.cpp',
-    'src/Pistachio/Scripting/AngelScript/ScriptAPIBase.cpp',
-    'src/Pistachio/Scripting/AngelScript/ScriptAPI_ECS.cpp',
     'src/Pistachio/Allocators/AtlasAllocator.cpp',
     'src/Pistachio/Utils/RendererUtils.cpp',
     'vendor/SimpleMath/SimpleMath.cpp', #we don't need the entire DXTK

@@ -115,7 +115,7 @@ namespace Pistachio {
 			out << YAML::Key << "MeshRendererComponent";
 			out << YAML::BeginMap;
 			auto& mr = entity.GetComponent<MeshRendererComponent>();
-			out << YAML::Key << "Model" << GetAssetManager()->GetAssetFileName(mr.Model);
+			out << YAML::Key << "Model" << GetAssetManager()->GetAssetFileName(mr.model);
 			out << YAML::Key << "Material" << GetAssetManager()->GetAssetFileName(mr.material);
 			out << YAML::Key << "Model Index" << mr.modelIndex;
 			out << YAML::EndMap;
@@ -303,7 +303,7 @@ namespace Pistachio {
 					if (mat != "None")
 						mr.material = GetAssetManager()->CreateMaterialAsset(mat).value_or(Asset{});
 					if (model != "None")
-						mr.Model = GetAssetManager()->CreateModelAsset(model).value_or(Asset{});
+						mr.model = GetAssetManager()->CreateModelAsset(model).value_or(Asset{});
 				}
 			}
 			int i = 0;

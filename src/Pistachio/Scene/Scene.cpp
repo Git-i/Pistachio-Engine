@@ -276,7 +276,7 @@ namespace Pistachio {
 					for (auto entity : meshesToDraw)
 					{
 						auto& meshc = m_Registry.get<MeshRendererComponent>(entity);
-						const Model* model = assetMan->GetResource<Model>(meshc.Model);
+						const Model* model = assetMan->GetResource<Model>(meshc.model);
 						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 						Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
@@ -335,7 +335,7 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							const Model* model = assetMan->GetResource<Model>(meshc.Model);
+							const Model* model = assetMan->GetResource<Model>(meshc.model);
 							if(!model) continue;
 							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
@@ -411,7 +411,7 @@ namespace Pistachio {
 						for (auto entity : meshes)
 						{
 							auto& meshc = meshes.get<MeshRendererComponent>(entity);
-							const auto* model = assetMan->GetResource<Model>(meshc.Model);
+							const auto* model = assetMan->GetResource<Model>(meshc.model);
 							const Mesh& mesh = model->meshes[meshc.modelIndex];
 							list->BindDynamicDescriptor(Renderer::GetCBDesc(), 0, Renderer::GetCBOffset(meshc.handle));
 							Renderer::Submit(list, mesh.GetVBHandle(), mesh.GetIBHandle(), sizeof(Vertex));
@@ -545,7 +545,7 @@ namespace Pistachio {
 						mtl->Bind(list);
 						Renderer::FullCBUpdate(mtl->parametersBuffer, mtl->parametersBufferCPU);
 						const Shader& shd = assetMan->GetResource<ShaderAsset>(mtl->GetShader())->GetShader();
-						const auto* model = assetMan->GetResource<Model>(meshc.Model);
+						const auto* model = assetMan->GetResource<Model>(meshc.model);
 						const Mesh& mesh = model->meshes[meshc.modelIndex];
 						shd.ApplyBinding(list, passCBinfoVS_PS[RendererBase::GetCurrentFrameIndex()]);
 						shd.ApplyBinding(list, sceneInfo);
@@ -947,7 +947,7 @@ namespace Pistachio {
 		for (auto entity : mesh_transform)
 		{
 			auto [mesh, transform] = mesh_transform.get(entity);
-			const auto* model = GetAssetManager()->GetResource<Model>(mesh.Model);
+			const auto* model = GetAssetManager()->GetResource<Model>(mesh.model);
 			if (model)
 			{
 				BoundingBox box = model->aabbs[mesh.modelIndex];

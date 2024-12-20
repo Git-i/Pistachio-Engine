@@ -34,7 +34,7 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		PT_PROFILE_FUNCTION();
 		if(auto wnd = Application::Get().GetWindow())
-		{			
+		{
 			wnd->GetSwapChain().BackBufferBarrier(
 				RHI::PipelineStage::TRANSFER_BIT,
 				RHI::PipelineStage::BOTTOM_OF_PIPE_BIT, 
@@ -63,7 +63,7 @@ namespace Pistachio {
 			base.mainCommandList->Begin(base.commandAllocators[base.currentFrameIndex]);
 		}
 	}
-	uint32_t DeviceScore(RHI::PhysicalDevice* device)
+	uint32_t DeviceScore(RHI::Weak<RHI::PhysicalDevice> device)
 	{
 		uint32_t score = 1;
 		auto desc = device->GetDesc();
@@ -77,14 +77,14 @@ namespace Pistachio {
 		}
 		return score;
 	}
-	static RHI::PhysicalDevice* SelectPhysicalDevice(std::span<RHI::PhysicalDevice*> devices)
+	static RHI::Ptr<RHI::PhysicalDevice> SelectPhysicalDevice(std::span<RHI::Ptr<RHI::PhysicalDevice>> devices)
 	{
-		std::unordered_map<RHI::PhysicalDevice*, uint32_t> scores;
+		std::unordered_map<RHI::Ptr<RHI::PhysicalDevice>*, uint32_t> scores;
 		for(auto& device: devices)
 		{
-			scores[device] = DeviceScore(device);
+			scores[&device] = DeviceScore(device);
 		}
-		std::pair<RHI::PhysicalDevice*, uint32_t> device = {nullptr, 0};
+		std::pair<RHI::Ptr<RHI::PhysicalDevice>*, uint32_t> device = {nullptr, 0};
 		for(auto& score : scores)
 		{
 			if (score.second > device.second)
@@ -92,7 +92,7 @@ namespace Pistachio {
 				device = score;
 			}
 		}
-		return device.first;
+		return *device.first;
 	}
 	std::pair<std::vector<RHI::CommandQueueDesc>, bool> CreateCommandQueueDesc(const RHI::QueueInfo& info, bool force_single)
 	{
@@ -150,16 +150,16 @@ namespace Pistachio {
 			}
 		}
 		else {
-			uint32_t num_devices =  instance->GetNumPhysicalDevices();
-			PT_CORE_INFO("Found {0} physical devices: ", num_devices);
-			std::vector<RHI::PhysicalDevice*> pdevices(num_devices);
-			instance->GetAllPhysicalDevices(pdevices.data());
+			auto pdevices = instance->GetAllPhysicalDevices();
+			PT_CORE_INFO("Found {0} physical devices: ", pdevices.size());
 			physicalDevice = options.custom_fn ?  options.custom_fn(pdevices) : SelectPhysicalDevice(pdevices);
-			for (auto pDevice : pdevices)
+			for (auto& pDevice : pdevices)
 			{
 				auto pDDesc = pDevice->GetDesc();
-				if(options.useLuid) if (memcmp(options.luid.data, pDDesc.AdapterLuid.data, 8) == 0) physicalDevice = pDevice;
-				PT_CORE_INFO("    {0}", pDDesc.Description);
+				if(options.useLuid)
+					if (memcmp(options.luid.data, pDDesc.AdapterLuid.data, 8) == 0)
+						physicalDevice = pDevice;
+				PT_CORE_INFO("    {0} {1}", pDDesc.Description, physicalDevice == pDevice ? "[Selected]" : "");
 			}
 			
 
@@ -583,7 +583,8 @@ namespace Pistachio {
 		auto& base = Application::Get().GetRendererBase();
 		return base.blackTexture;
 	}
-	RHI::PhysicalDevice* RendererBase::GetPhysicalDevice()
+
+	RHI::Ptr<RHI::PhysicalDevice> RendererBase::GetPhysicalDevice()
 	{
 		return Get().physicalDevice;
 	}

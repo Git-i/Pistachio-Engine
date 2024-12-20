@@ -25,6 +25,7 @@ namespace Pistachio {
 #else
 #define PT_CORE_VERBOSE(...)
 #endif
+
 #if _DEBUG
 #define PT_CORE_TRACE(...) Pistachio::Log::GetCoreLogger()->trace(__VA_ARGS__)
 #define PT_CORE_INFO(...)  Pistachio::Log::GetCoreLogger()->info(__VA_ARGS__)

@@ -96,7 +96,7 @@ namespace Pistachio {
 			Internal_ID custom_direct_queue;//required
 			Internal_ID custom_compute_queue;//optional
 			RHI::QueueFamilyIndices indices;
-			std::function<RHI::PhysicalDevice*(std::span<RHI::PhysicalDevice*>)> custom_fn;
+			std::function<RHI::Ptr<RHI::PhysicalDevice>(std::span<RHI::Ptr<RHI::PhysicalDevice>>)> custom_fn;
 		};
 		static void Shutdown();
 		static void EndFrame();
@@ -124,7 +124,7 @@ namespace Pistachio {
 		static RHI::Ptr<RHI::GraphicsCommandList>& GetStagingCommandList();
 		static RHI::Ptr<RHI::DescriptorHeap>& GetMainDescriptorHeap();
 		static RHI::Ptr<RHI::Texture>& GetBackBufferTexture(uint32_t index);
-		static RHI::PhysicalDevice* GetPhysicalDevice();
+		static RHI::Ptr<RHI::PhysicalDevice> GetPhysicalDevice();
 		static RHI::Ptr<RHI::CommandQueue>& GetDirectQueue();
 		static RHI::Ptr<RHI::CommandQueue>& GetComputeQueue(); ///<-Returns Invalid Ptr if using single queue
 		static Texture2D& GetWhiteTexture();
@@ -152,7 +152,7 @@ namespace Pistachio {
 		RHI::Ptr<RHI::CommandAllocator> stagingCommandAllocator;
 		RHI::Ptr<RHI::CommandAllocator> commandAllocators[3];
 		RHI::Ptr<RHI::CommandAllocator> computeCommandAllocators[3];
-		RHI::PhysicalDevice* physicalDevice;
+		RHI::Ptr<RHI::PhysicalDevice> physicalDevice;
 		RHI::Ptr<RHI::CommandQueue> directQueue;
 		RHI::Ptr<RHI::CommandQueue> computeQueue;
 		RHI::Ptr<RHI::Instance> instance;

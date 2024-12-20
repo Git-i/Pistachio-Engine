@@ -62,7 +62,7 @@ namespace Pistachio{
 
 	// 3D -------------------------------------------------------------------------------------------------------------------
 	struct PISTACHIO_API MeshRendererComponent {
-		Asset Model;
+		Asset model;
 		Asset material;
 		int modelIndex = 0;
 		bool bMaterialDirty = true;
@@ -70,10 +70,12 @@ namespace Pistachio{
 		~MeshRendererComponent() = default;
 		MeshRendererComponent() = default;
 		MeshRendererComponent(const MeshRendererComponent& other) = default;
-		MeshRendererComponent(const char* path) { 
-			Model = GetAssetManager()->CreateModelAsset(path).value_or(Asset{}); 
-		}
+
+		explicit MeshRendererComponent(const char* path);
 	};
+
+
+
 	/**
 	 * @brief Environment configuration component, only to be used in the  root node
 	 * 

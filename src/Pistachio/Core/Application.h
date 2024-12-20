@@ -38,7 +38,7 @@ namespace Pistachio {
 		//leave null to log to stdout
 		const char* log_file_name = nullptr;
 		std::string_view shader_dir;
-		std::function<RHI::PhysicalDevice*(std::span<RHI::PhysicalDevice*>)> select_physical_device;
+		std::function<RHI::Ptr<RHI::PhysicalDevice>(std::span<RHI::Ptr<RHI::PhysicalDevice>>)> select_physical_device;
 	};
 	class PISTACHIO_API Application
 	{
