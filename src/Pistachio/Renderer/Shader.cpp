@@ -559,6 +559,8 @@ namespace Pistachio {
 		desc.mode = mode;
 		desc.rootSig = shader->rSig;
 		shader->pipeline = RendererBase::GetDevice()->CreateComputePipeline(desc).value();
+		if(mode == RHI::File)
+			shader->pipeline->SetName(code.data.data());
 		return shader;
 	}
 

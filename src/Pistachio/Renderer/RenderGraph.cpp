@@ -241,8 +241,6 @@ namespace Pistachio
     {
         pso = shader->GetCurrentPipeline();
         rsig = shader->GetRootSignature();
-        pso->Hold();
-        rsig->Hold();
     }
     RenderPass::~RenderPass()
     {
@@ -287,8 +285,6 @@ namespace Pistachio
     {
         computePipeline = shader->pipeline;
         rsig = shader->rSig;
-        rsig->Hold();
-        computePipeline->Hold();
     }
     void ComputePass::SetShader(const RHI::Ptr<RHI::ComputePipeline>& pipeline)
     {

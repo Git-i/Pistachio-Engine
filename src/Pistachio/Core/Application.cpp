@@ -12,10 +12,12 @@
 namespace Pistachio {
 	extern InputHandler* CreateDefaultInputHandler();
 	Application* Application::s_Instance = nullptr;
+	static bool exists = false;
 	Application::Application(const char* name, const ApplicationOptions& opt)
 	{
 		PT_PROFILE_FUNCTION();
 		s_Instance = this;
+		exists = true;
 		m_headless = opt.headless;
 		Pistachio::Log::Init(opt.log_file_name);
 		RendererBase::InitOptions ropt;
@@ -62,6 +64,7 @@ namespace Pistachio {
 	Application::~Application()
 	{
 		RendererBase::FlushGPU();
+		exists = false;
 	}
 
 	void Application::PushLayer(Layer* layer)
@@ -139,7 +142,7 @@ namespace Pistachio {
 	}
 	bool Application::Exists()
 	{
-		return s_Instance;
+		return exists;
 	}
 	void Application::Step()
 	{
