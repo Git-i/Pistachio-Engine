@@ -30,10 +30,9 @@ namespace Pistachio
 	{
 		auto assetMan = GetAssetManager();
 		if (m_uuid) {
-			auto res = assetMan->assetResourceMap[m_uuid];
+			auto& res = assetMan->assetResourceMap[m_uuid];
 			if (res->release() == 0)
 			{
-				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
 				auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
@@ -48,10 +47,9 @@ namespace Pistachio
 	{
 		auto assetMan = GetAssetManager();
 		if (m_uuid) {
-			auto res = assetMan->assetResourceMap[m_uuid];
+			auto& res = assetMan->assetResourceMap[m_uuid];
 			if (res->release() == 0)
 			{
-				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
 				auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
@@ -77,11 +75,10 @@ namespace Pistachio
 	{
 		if (m_uuid == UUID(0)) return;
 		auto assetMan = GetAssetManager();
-		auto res = assetMan->assetResourceMap[m_uuid];
+		auto& res = assetMan->assetResourceMap[m_uuid];
 		if (m_uuid) {
 			if (res->release() == 0)
 			{
-				delete res;
 				assetMan->assetResourceMap.erase(m_uuid);
 				const auto it = std::find_if(assetMan->pathUUIDMap.begin(), assetMan->pathUUIDMap.end(), [this](auto&& p) { return p.second == m_uuid; });
 				assetMan->pathUUIDMap.erase(it->first);
@@ -134,9 +131,9 @@ namespace Pistachio
 	}
 	void AssetManager::ReportLiveObjects()
 	{
-		for (auto [uuid, res] : assetResourceMap)
+		for (auto& [uuid, res] : assetResourceMap)
 		{
-			PT_CORE_INFO("Live object with id: {0} at memory location {1}", (uint64_t)uuid, (void*)res);
+			PT_CORE_INFO("Live object with id: {0} at memory location {1}", static_cast<uint64_t>(uuid), static_cast<void*>(res.get()));
 		}
 	}
 
@@ -156,8 +153,8 @@ namespace Pistachio
 		else
 		{
 			UUID uuid = UUID();
-			Result<RefCountedObject*> obj;
-			auto result_to_ref_obj = [](auto&& result) -> RefCountedObject* { return static_cast<RefCountedObject*>(result); };
+			Result<std::unique_ptr<RefCountedObject>> obj;
+			auto result_to_ref_obj = [](auto&& result) -> std::unique_ptr<RefCountedObject> { return result; };
 			if (type == ResourceType::Texture) obj = Texture2D::Create(filename.c_str(), filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Material) obj = Material::Create(filename.c_str()).transform(result_to_ref_obj);
 			else if (type == ResourceType::Shader) obj = ShaderAsset::Create(filename.c_str()).transform(result_to_ref_obj);
@@ -166,13 +163,13 @@ namespace Pistachio
 			else obj = ezr::err(Error(ErrorType::InvalidResourceType, PT_PRETTY_FUNCTION));
 
 			if(!obj) return ezr::err(std::move(obj).err());
-			assetResourceMap[uuid] = obj.value();
+			assetResourceMap[uuid] = std::move(obj.value());
 			pathUUIDMap[filename] = uuid;
 			assetResourceMap.at(uuid)->release();
 			return ezr::ok(Asset(uuid, type));
 		}
 	}
-	std::optional<Asset> AssetManager::FromResource(RefCountedObject* resource,const std::string& in, ResourceType type)
+	std::optional<Asset> AssetManager::FromResource(std::unique_ptr<RefCountedObject> resource,const std::string& in, ResourceType type)
 	{
 		if (pathUUIDMap.contains(in))
 		{
@@ -181,9 +178,8 @@ namespace Pistachio
 		else
 		{
 			UUID uuid = UUID();
-			assetResourceMap[uuid] = resource;
+			assetResourceMap[uuid] = std::move(resource);
 			pathUUIDMap[in] = uuid;
-			assetResourceMap.at(uuid)->release();
 			return Asset(uuid, type);
 		}
 	}

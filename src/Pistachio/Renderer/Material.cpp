@@ -95,27 +95,21 @@ namespace Pistachio
 		fout.close();
 	}
 	
-	Result<Material*> Material::Create(const char* filepath)
+	Result<std::unique_ptr<Material>> Material::Create(const char* filepath)
 	{
-		Material* mat = new Material;
+		auto mat = std::make_unique<Material>();
 		std::ifstream stream(filepath);
 		std::stringstream strStream;
 		strStream << stream.rdbuf();
 		YAML::Node data = YAML::Load(strStream.str());
 		if (!data["Material"])
-		{
-			delete mat;
 			return ezr::err(Error(ErrorType::InvalidFile, PT_PRETTY_FUNCTION));
-		}
 		uint32_t numTextures = data["Num Textures"].as<uint32_t>();
 		for (uint32_t i = 0; i < numTextures; i++)
 		{
 			auto asset = GetAssetManager()->CreateTexture2DAsset(data[std::to_string(i)].as<std::string>());
 			if(asset.is_err())
-			{
-				delete mat;
-				return asset.transform([](auto a) -> Material* {return nullptr;});
-			}
+				return asset.transform([](auto a) -> std::unique_ptr<Material> {return nullptr;});
 			mat->m_textures.push_back(asset.value());
 		}
 		std::string shader_name = data["Shader Asset"].as<std::string>();
@@ -131,7 +125,7 @@ namespace Pistachio
 		shader->GetShader().GetShaderBinding(mat->mtlInfo, 3);
 		Renderer::AllocateConstantBuffer(shader->GetParamBufferSize());
 		
-		return ezr::ok(mat);
+		return mat;
 	}
 	void Material::SetShader(Asset _shader)
 	{

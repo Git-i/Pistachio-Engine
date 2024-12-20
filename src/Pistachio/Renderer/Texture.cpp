@@ -110,17 +110,14 @@ namespace Pistachio
         PT_PROFILE_FUNCTION();
     }
 
-    Result<Texture2D*> Texture2D::Create(const char* path , const char* name, RHI::Format format, TextureFlags flags)
+    Result<std::unique_ptr<Texture2D>> Texture2D::Create(const char* path , const char* name, RHI::Format format, TextureFlags flags)
     {
         PT_PROFILE_FUNCTION();
-        Texture2D* result = new Texture2D;
+        auto result = std::make_unique<Texture2D>();
         auto e = result->CreateStack(path, format , name);
         if(!e.Successful())
-        {
-            delete result;
-            return Result<Texture2D*>(e);
-        }
-        return Result<Texture2D*>(result);
+            return ezr::err(e);
+        return result;
     }
     Error Texture2D::CreateStack(const char* path, RHI::Format format , const char* name, TextureFlags flags )
     {
@@ -159,19 +156,16 @@ namespace Pistachio
         if(e.Successful() && name) m_ID->SetName(name);
         return e;
     }
-    Result<Texture2D*> Texture2D::Create(uint32_t width, uint32_t height, RHI::Format format, void* data , const char* name, TextureFlags flags)
+    Result<std::unique_ptr<Texture2D>> Texture2D::Create(uint32_t width, uint32_t height, RHI::Format format, void* data , const char* name, TextureFlags flags)
     {
         PT_PROFILE_FUNCTION();
-        Texture2D* result = new Texture2D;
+        auto result = std::make_unique<Texture2D>();
         result->m_Width = width;
         result->m_Height = height;
         auto e = result->CreateStack(width, height, format, data , name, flags);
-        if(!e.Successful()) 
-        {
-            delete result;
-            return Result<Texture2D*>(e);
-        }
-        return Result<Texture2D*>(result);
+        if(!e.Successful())
+            return ezr::err(e);
+        return result;
     }
     bool Texture2D::operator==(const Texture2D& texture) const
     {

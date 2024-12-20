@@ -35,8 +35,8 @@ namespace Pistachio {
 		uint32_t GetWidth() const override;
 		Texture2D() : m_Width(0), m_Height(0), m_format(RHI::Format::UNKNOWN){};
 		void Bind(int slot = 0) const;
-		static Result<Texture2D*> Create(const char* path ,const char* name, RHI::Format format = RHI::Format::R8G8B8A8_UNORM, TextureFlags flags = TextureFlags::None);
-		static Result<Texture2D*> Create(uint32_t width, uint32_t height, RHI::Format format,void* data ,const char* name, TextureFlags flags = TextureFlags::None);
+		static Result<std::unique_ptr<Texture2D>> Create(const char* path ,const char* name, RHI::Format format = RHI::Format::R8G8B8A8_UNORM, TextureFlags flags = TextureFlags::None);
+		static Result<std::unique_ptr<Texture2D>> Create(uint32_t width, uint32_t height, RHI::Format format,void* data ,const char* name, TextureFlags flags = TextureFlags::None);
 		Error CreateStack(const char* path, RHI::Format format ,const char* name, TextureFlags flags = TextureFlags::None);
 		Error CreateStack(uint32_t width, uint32_t height, RHI::Format format,void* data ,const char* name, TextureFlags flags = TextureFlags::None);
 		RHI::Ptr<RHI::TextureView> GetView()const { return m_view; }

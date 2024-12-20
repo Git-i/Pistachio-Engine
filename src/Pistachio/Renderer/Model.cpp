@@ -5,12 +5,12 @@
 #include "../Core/Error.h"
 
 namespace Pistachio {
-    Result<Model*> Model::Create(const char* path)
+    Result<std::unique_ptr<Model>> Model::Create(const char* path)
     {
         auto md = std::make_unique<Model>();
         if(auto e = md->loadModel(path); !e.Successful())
             return ezr::err(std::move(e));
-        return ezr::ok(md.release());
+        return md;
     }
     Error Model::loadModel(const char* path)
     {

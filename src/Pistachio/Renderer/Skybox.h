@@ -11,8 +11,8 @@ namespace Pistachio
     class Skybox : public RefCountedObject
     {
     public:
-        [[nodiscard]] static Result<Skybox*> Create(std::string_view path);
-        [[nodiscard]] static Result<Skybox*> Create(const void* skybox_memory, size_t size);
+        [[nodiscard]] static Result<std::unique_ptr<Skybox>> Create(std::string_view path);
+        [[nodiscard]] static Result<std::unique_ptr<Skybox>> Create(const void* skybox_memory, size_t size);
         [[nodiscard]] Error Initialize(std::string_view path);
         [[nodiscard]] Error Initialize(const void* skybox_memory, size_t size);
         [[nodiscard]] const CubeMap* Base() const {return base;}

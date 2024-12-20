@@ -3,19 +3,19 @@
 #include "Pistachio/Utils/PlatformUtils.h"
 namespace Pistachio
 {
-    Result<Skybox*> Skybox::Create(std::string_view path)
+    Result<std::unique_ptr<Skybox>> Skybox::Create(std::string_view path)
     {
         auto ret = std::make_unique<Skybox>();
         auto err = ret->Initialize(path);
         if(!err.Successful()) return ezr::err(std::move(err));
-        return ret.release();
+        return ret;
     }
-    Result<Skybox*> Skybox::Create(const void* memory, size_t size)
+    Result<std::unique_ptr<Skybox>> Skybox::Create(const void* memory, size_t size)
     {
         auto ret = std::make_unique<Skybox>();
         auto err = ret->Initialize(memory, size);
         if(!err.Successful()) return ezr::err(std::move(err));
-        return ret.release();
+        return ret;
     }
     /*
         pSkb Specification (all numbers are little endian)

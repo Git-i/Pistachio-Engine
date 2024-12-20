@@ -37,12 +37,12 @@ namespace Pistachio
     {
         //shader.VS.data = nullptr; //avoid the shader destructor deletin this
     }
-    Result<ShaderAsset*> ShaderAsset::Create(const char* filename)
+    Result<std::unique_ptr<ShaderAsset>> ShaderAsset::Create(const char* filename)
     {
         if(!std::filesystem::exists(filename)) return ezr::err(Error(ErrorType::InvalidFile, PT_PRETTY_FUNCTION));
         std::ifstream infile(filename, std::ios::binary);
         if(!infile) return ezr::err(Error(ErrorType::Unknown, PT_PRETTY_FUNCTION));
-        ShaderAsset* returnVal = new ShaderAsset;
+        auto returnVal = std::make_unique<ShaderAsset>();
         uint32_t numParams = 0;
         infile.read((char*)&numParams, sizeof(uint32_t));
         numParams = Edian::ConvertToSystemEndian(numParams, Pistachio::Big);
@@ -130,7 +130,7 @@ namespace Pistachio
 
 
         returnVal->shader.CreateStack(desc, {{1u}}, std::nullopt);
-        return ezr::ok(returnVal);
+        return returnVal;
     }
     ParamInfo ShaderAsset::GetParameterInfo(const std::string& paramName) const
     {

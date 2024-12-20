@@ -217,7 +217,7 @@ namespace Pistachio
 		ShaderDesc.InputDescription = Mesh::GetLayout();
 		ShaderDesc.numInputs = Mesh::GetLayoutSize();
 		PT_CORE_INFO("Creating Default Forward Shader");
-		auto fwdShader = new ShaderAsset();
+		auto fwdShader = std::make_unique<ShaderAsset>();
 		fwdShader->GetShader().CreateStack(ShaderDesc, {{0,4}}, std::nullopt);
 		fwdShader->paramBufferSize = 12;
 		fwdShader->parametersMap["Diffuse"] = ParamInfo{ 0,ParamType::Float };
@@ -227,7 +227,7 @@ namespace Pistachio
 		fwdShader->bindingsMap["Metallic Texture"] = 1;
 		fwdShader->bindingsMap["Roughness Texture"] = 2;
 		fwdShader->bindingsMap["Normal Texture"] = 3;
-		defaultShader = GetAssetManager()->FromResource(fwdShader, "Default Shader", Pistachio::ResourceType::Shader).value();
+		defaultShader = GetAssetManager()->FromResource(std::move(fwdShader), "Default Shader", Pistachio::ResourceType::Shader).value();
 
 		//Z-Prepass
 		Helpers::FillDepthStencilMode(dsMode);

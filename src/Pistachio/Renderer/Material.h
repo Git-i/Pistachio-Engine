@@ -19,7 +19,7 @@ namespace Pistachio
 	public:
 		void ChangeTexture(uint32_t slot, Texture* texture);
 		template<typename ParamTy> void ChangeParam(const std::string& name, const ParamTy& value);
-		static Result<Material*> Create(const char* filepath);
+		static Result<std::unique_ptr<Material>> Create(const char* filepath);
 		void SetShader(Asset shader);
 		const Asset& GetShader() const { return shader; }
 		//Unsafe: use only if you wrote this engine or know what you're doing

@@ -15,12 +15,18 @@
 #include "Pistachio/Core/Log.h"
 #include "Util/FormatUtils.h"
 #include <cstdint>
+#include <ranges>
 #include <vector>
+#include <Vulkan/VulkanSpecific.h>
 static const uint32_t STAGING_BUFFER_INITIAL_SIZE = 80 * 1024 * 1024; //todo: reduce this
 namespace Pistachio {
 	static RHI::Device* s_device = nullptr;
 	void exit_handler()
 	{
+		for(auto& str : reinterpret_cast<RHI::vDevice*>(s_device)->objects | std::views::values)
+		{
+			PT_CORE_WARN("{}", str);
+		}
 		raise(SIGTRAP);
 	}
 	void RendererBase::Shutdown()
@@ -240,8 +246,8 @@ namespace Pistachio {
 		uint8_t whiteData[4] = {255,255,255,255};
 		uint8_t blackData[4] = {0,0,0,0};
 
-		whiteTexture.CreateStack(1,1,RHI::Format::R8G8B8A8_UNORM,whiteData PT_DEBUG_REGION(, "RendererBase -> White Texture"));
-		blackTexture.CreateStack(1,1,RHI::Format::R8G8B8A8_UNORM,blackData PT_DEBUG_REGION(, "RendererBase -> White Texture"));
+		whiteTexture.CreateStack(1,1,RHI::Format::R8G8B8A8_UNORM,whiteData, "RendererBase -> White Texture");
+		blackTexture.CreateStack(1,1,RHI::Format::R8G8B8A8_UNORM,blackData, "RendererBase -> White Texture");
 
 		//prep for rendering
 		mainCommandList->Begin(commandAllocators[0]);

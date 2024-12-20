@@ -35,7 +35,7 @@ namespace Pistachio
 	{
 	public:
 		~ShaderAsset();
-		static Result<ShaderAsset*> Create(const char* filename);
+		static Result<std::unique_ptr<ShaderAsset>> Create(const char* filename);
 		[[nodiscard]] ParamInfo GetParameterInfo(const std::string& paramName) const;
 		[[nodiscard]] Shader& GetShader() { return shader; }
 		[[nodiscard]] const Shader& GetShader() const { return shader; }

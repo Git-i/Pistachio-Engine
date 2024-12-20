@@ -23,21 +23,24 @@ namespace Pistachio
 		template<is_resource Resource> [[nodiscard]] const Resource* GetResource(const Asset& asset) const;
 		friend class Asset;
 		//intended to only be used by engine developer. it will most likely leak memory otherwise
-		[[nodiscard]] std::optional<Asset> FromResource(RefCountedObject* resource, const std::string& str_id, ResourceType type);
-		~AssetManager() { ReportLiveObjects(); }
+		[[nodiscard]] std::optional<Asset> FromResource(std::unique_ptr<RefCountedObject> resource, const std::string& str_id, ResourceType type);
+		~AssetManager()
+		{
+			ReportLiveObjects();
+		}
 	private:
 		friend class Renderer;
 		Result<Asset> CreateAsset(const std::string& filename, ResourceType type);
 	private:
 		std::unordered_map<std::string, UUID> pathUUIDMap;
-		std::unordered_map<UUID, RefCountedObject*> assetResourceMap;
+		std::unordered_map<UUID, std::unique_ptr<RefCountedObject>> assetResourceMap;
 	};
 
 	template <is_resource Resource>
 	const Resource* AssetManager::GetResource(const Asset& asset) const
 	{
 		if (const auto it = assetResourceMap.find(asset.m_uuid); it != assetResourceMap.end())
-			return dynamic_cast<Resource*>(it->second);
+			return dynamic_cast<Resource*>(it->second.get());
 		return nullptr;
 	}
 

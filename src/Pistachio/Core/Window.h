@@ -53,7 +53,7 @@ using EventCallbackFn = std::function<void(Pistachio::Event& e)>;
 			void Update();
 			void Initialize(uint32_t width, uint32_t height);
 			void Resize(uint32_t width, uint32_t height);
-			std::vector<RHI::Ptr<RHI::Texture>> swapTextures;
+			std::vector<RHI::Weak<RHI::Texture>> swapTextures;
 		private:
 			friend class RendererBase;
 			void BackBufferBarrier(RHI::PipelineStage,RHI::PipelineStage,
