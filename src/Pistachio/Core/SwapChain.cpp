@@ -33,9 +33,9 @@ namespace Pistachio
 		barr.previousQueue = barr.nextQueue = RHI::QueueFamily::Ignored;
 		base.mainCommandList->PipelineBarrier(before, after, {},{&barr,1});
 	}
-	static RHI::SwapChainDesc MakeDesc(RHI::Surface& srf, uint32_t width, uint32_t height)
+	static RHI::SwapChainDesc MakeDesc(RHI::Weak<RHI::Surface> srf, uint32_t width, uint32_t height)
 	{
-		static uint32_t size  = RendererUtils::SwapImageCount(RendererBase::GetInstance()->GetSwapChainMinMaxImageCount(RendererBase::GetPhysicalDevice(), &srf), 2);
+		static uint32_t size  = RendererUtils::SwapImageCount(RendererBase::GetInstance()->GetSwapChainMinMaxImageCount(RendererBase::GetPhysicalDevice(), srf), 2);
 		RHI::SwapChainDesc sDesc;
 		sDesc.BufferCount = size;
 		sDesc.Flags = 0;
@@ -43,7 +43,7 @@ namespace Pistachio
 		sDesc.Width = width;
 		sDesc.OutputSurface = srf;
 		sDesc.RefreshRate = { 60,1 };
-		sDesc.SampleCount = 1; //disable multisampling for now, because RHI doesnt fully support it
+		sDesc.SampleCount = 1; //disable multisampling for now, because RHI doesn't fully support it
 		sDesc.SampleQuality = 0;
 		sDesc.SwapChainFormat = RHI::Format::B8G8R8A8_UNORM;//todo add functionality to get supported formats in the RHI
 		sDesc.Windowed = true;

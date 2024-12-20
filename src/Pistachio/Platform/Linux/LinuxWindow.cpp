@@ -89,7 +89,7 @@ namespace Pistachio {
         glfwSetScrollCallback(pd.window, scroll_callback);
 		glfwSetWindowCloseCallback(pd.window, window_close);
 		glfwSetWindowSizeCallback(pd.window, window_resize);
-		m_swapChain.surface.InitGLFW(pd.window, RendererBase::GetInstance()->ID);
+		m_swapChain.surface = RHI::Surface::InitGLFW(pd.window, RendererBase::GetInstance()).value();
 		m_swapChain.Initialize(info.width, info.height);
         return 0;
 	}

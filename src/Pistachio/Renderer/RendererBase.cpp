@@ -23,10 +23,6 @@ namespace Pistachio {
 	static RHI::Device* s_device = nullptr;
 	void exit_handler()
 	{
-		for(auto& str : reinterpret_cast<RHI::vDevice*>(s_device)->objects | std::views::values)
-		{
-			PT_CORE_WARN("{}", str);
-		}
 		raise(SIGTRAP);
 	}
 	void RendererBase::Shutdown()

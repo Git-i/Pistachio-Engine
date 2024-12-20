@@ -48,7 +48,7 @@ using EventCallbackFn = std::function<void(Pistachio::Event& e)>;
 		class PISTACHIO_API SwapChain
 		{
 		public:
-			RHI::Surface surface;
+			RHI::Ptr<RHI::Surface> surface;
 			RHI::Ptr<RHI::SwapChain> swapchain;
 			void Update();
 			void Initialize(uint32_t width, uint32_t height);
