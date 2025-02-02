@@ -104,8 +104,9 @@ float2 IntegrateBRDF(float NdotV, float roughness)
 [numthreads(1, 1, 1)]
 void main( uint3 DTid : SV_DispatchThreadID )
 {
-    uint width, height;
+    float width, height;
     brdfLUT.GetDimensions(width, height);
     float2 uv = float2(DTid.xy) / float2(width, height);
-    brdfLUT[DTid.xy] = IntegrateBRDF(uv.x,uv.y);
+    float offset = .5f / width;
+    brdfLUT[DTid.xy] = IntegrateBRDF(uv.x + offset,uv.y + offset);
 }
