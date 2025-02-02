@@ -53,7 +53,7 @@ Texture2D normalTex    : register(t3, space3);
 //set 4 is because its a dynamic descriptor
 cbuffer materialBuffer : register(b0, space4)
 {
-    float diffuseFac;
+    float4 diffuseFac;
     float metallicFac;
     float roughnessFac;
 };
@@ -61,9 +61,9 @@ cbuffer materialBuffer : register(b0, space4)
 struct PSINTPUT
 {
     float3 WorldPos : WORLD_POSITION;
-    float3 Normal : FRAGMENT_NORMAL;
     float2 uv : UV;
     float depthViewSpace : VS_DEPTH;
+    float3x3 TBN : TBN_MAT;
     float4 pos : SV_Position;
 };
 #define PI 3.14159265359
@@ -137,7 +137,8 @@ uint getSlice(float z, float scale, float bias)
 float4 main(PSINTPUT input) : SV_TARGET
 {
     float4 diffuse = diffuseFac * diffuseTex.Sample(textureSampler, input.uv);
-    float3 normal = input.Normal; //todo normal mapping
+    float3 normal = normalTex.Sample(textureSampler, input.uv).rgb * 2.0 - 1.0;
+    normal = normalize(mul(input.TBN, normal));
     float metallic = metallicFac * mettalicTex.Sample(textureSampler, input.uv).r;
     float roughness = roughnessFac * roughnessTex.Sample(textureSampler, input.uv).r;
 

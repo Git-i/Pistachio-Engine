@@ -19,7 +19,12 @@ namespace Pistachio {
         if (!std::filesystem::exists(path))
             return {ErrorType::NonExistentFile, std::string(__FUNCTION__) + ", filename: " + path};
         Assimp::Importer importer;
-        const aiScene* scene = importer.ReadFile(path, aiProcess_GenNormals | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_ConvertToLeftHanded | aiProcess_GenBoundingBoxes);
+        const aiScene* scene = importer.ReadFile(path, aiProcess_GenNormals | 
+            aiProcess_Triangulate | 
+            aiProcess_JoinIdenticalVertices | 
+            aiProcess_ConvertToLeftHanded | 
+            aiProcess_GenBoundingBoxes |
+            aiProcess_CalcTangentSpace);
         if (!scene)
         {
             PT_CORE_ERROR(importer.GetErrorString());
@@ -83,6 +88,14 @@ namespace Pistachio {
             }
             else
                 vertex.TexCoord = { 0.0f, 0.0f };
+
+            vertex.tangent.x = mesh->mTangents[i].x;
+            vertex.tangent.y = mesh->mTangents[i].y;
+            vertex.tangent.z = mesh->mTangents[i].z;
+        
+            vertex.bi_tangent.x = mesh->mBitangents[i].x;
+            vertex.bi_tangent.y = mesh->mBitangents[i].y;
+            vertex.bi_tangent.z = mesh->mBitangents[i].z;
 
             vertices.push_back(vertex);
         }

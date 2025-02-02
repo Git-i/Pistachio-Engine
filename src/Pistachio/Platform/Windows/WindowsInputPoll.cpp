@@ -12,8 +12,7 @@ namespace Pistachio {
 	}
 	bool WindowsInputHandler::IsKeyPressed(KeyCode code)
 	{
-		return GetKeyState('A');
-		return (::GetKeyState(code) & 0x8000) != 0;
+		return (::GetAsyncKeyState(code) & 0x8000) != 0;
 	}
 	bool WindowsInputHandler::IsKeyJustPressed(KeyCode code)
 	{

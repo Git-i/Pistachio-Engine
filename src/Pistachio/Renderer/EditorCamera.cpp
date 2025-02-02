@@ -65,11 +65,11 @@ namespace Pistachio {
 			Vector2 delta = { (mouse.x - m_InitialMousePosition.x) * 0.003f , (mouse.y - m_InitialMousePosition.y) * 0.003f  };
 			m_InitialMousePosition = mouse;
 
-			if (Input::IsKeyPressed(PT_KEY_LEFT_CONTROL) && Input::IsKeyPressed(PT_MOUSE_BUTTON_LEFT))
+			if (Input::IsKeyPressed(KEY_LEFT_CONTROL) && Input::IsKeyPressed(MOUSE_BUTTON_LEFT))
 				MouseRotate(delta);
-			else if (Input::IsKeyPressed(PT_KEY_LEFT_SHIFT) && Input::IsKeyPressed(PT_MOUSE_BUTTON_LEFT))
+			else if (Input::IsKeyPressed(KEY_LEFT_SHIFT) && Input::IsKeyPressed(MOUSE_BUTTON_LEFT))
 				MousePan(delta);
-			else if (Input::IsKeyPressed(PT_KEY_LEFT_SHIFT) && Input::IsKeyPressed(PT_MOUSE_BUTTON_RIGHT))
+			else if (Input::IsKeyPressed(KEY_LEFT_SHIFT) && Input::IsKeyPressed(MOUSE_BUTTON_RIGHT))
 				MouseZoom(delta.y * 2);
 
 		UpdateView();

@@ -220,10 +220,10 @@ namespace Pistachio
 		PT_CORE_INFO("Creating Default Forward Shader");
 		auto fwdShader = std::make_unique<ShaderAsset>();
 		fwdShader->GetShader().CreateStack(ShaderDesc, {{0,4}}, std::nullopt);
-		fwdShader->paramBufferSize = 12;
-		fwdShader->parametersMap["Diffuse"] = ParamInfo{ 0,ParamType::Float };
-		fwdShader->parametersMap["Metallic"] = ParamInfo{ 4,ParamType::Float };
-		fwdShader->parametersMap["Roughness"] = ParamInfo{ 8,ParamType::Float };
+		fwdShader->paramBufferSize = 24;
+		fwdShader->parametersMap["Diffuse"] = ParamInfo{ 0,ParamType::Float4 };
+		fwdShader->parametersMap["Metallic"] = ParamInfo{ 16,ParamType::Float };
+		fwdShader->parametersMap["Roughness"] = ParamInfo{ 20,ParamType::Float };
 		fwdShader->bindingsMap["Diffuse Texture"] = 0;
 		fwdShader->bindingsMap["Metallic Texture"] = 1;
 		fwdShader->bindingsMap["Roughness Texture"] = 2;

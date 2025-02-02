@@ -11,9 +11,11 @@
 #include "Renderer.h"
 #include <thread>
 Pistachio::BufferLayout Pistachio::Mesh::layout[] = {
-			{"POSITION", RHI::Format::FLOAT3, 0},
-			{"NORMAL",   RHI::Format::FLOAT3, 12},
-			{"UV",       RHI::Format::FLOAT2, 24}
+			{"POSITION",  RHI::Format::FLOAT3, 0},
+			{"NORMAL",    RHI::Format::FLOAT3, 12},
+			{"UV",        RHI::Format::FLOAT2, 24},
+			{"TANGENT",   RHI::Format::FLOAT3, 32},
+			{"BITANGENT", RHI::Format::FLOAT3, 44},
 };
 void ProcessIndices(const aiMesh* pMesh, std::vector<unsigned int>& indices)
 {

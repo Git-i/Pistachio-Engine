@@ -1,10 +1,10 @@
 struct VS_OUT
 {
     float3 worldpos : WORLD_POSITION;
-	float3 normal : FRAGMENT_NORMAL;
     float2 UV : UV;
     float viewSpaceDepth : VS_DEPTH;
-	float4 position : SV_POSITION;
+    float3x3 TBN : TBN_MAT;
+    float4 position : SV_POSITION;
 };
 
 cbuffer FrameCB : register(b0, space1)
@@ -30,13 +30,24 @@ cbuffer ModelCB : register(b0, space0)
     matrix normalmatrix;
 };
 
-VS_OUT main(float3 pos : POSITION, float3 normal : NORMAL,float2 UV : UV)
+VS_OUT main(
+    float3 pos: POSITION, 
+    float3 normal: NORMAL,
+    float2 UV: UV,
+    float3 tangent: TANGENT,
+    float3 bi_tangent: BITANGET)
 {
 	VS_OUT vso;
     vso.worldpos = mul(float4(pos, 1.0f), transform).xyz;
     vso.UV = UV;
-    vso.normal = normalize(mul(normal, (float3x3) normalmatrix));
+    //vso.normal = normalize(mul(normal, (float3x3) normalmatrix));
     vso.position = mul(mul(float4(pos, 1.0f), transform), ViewProj);
+    vso.TBN = float3x3(
+        normalize(mul(float4(tangent, 0), transform).xyz),
+        normalize(mul(float4(bi_tangent, 0), transform).xyz),
+        normalize(mul(float4(normal, 0), transform).xyz)
+    );
+    vso.TBN = transpose(vso.TBN);
     float4 fragPosViewSpace = mul(float4(vso.worldpos, 1.0), View);
     vso.viewSpaceDepth = abs(fragPosViewSpace.z);
 

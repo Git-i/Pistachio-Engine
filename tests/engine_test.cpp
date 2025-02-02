@@ -37,7 +37,7 @@ public:
 		cam.OnEvent(event);
 	}
 	ExampleLayer(const char* name) :
-		Layer(name), cam(45.f, 16.f / 9.f, .1f, 100.f)
+		Layer(name), cam(45.f, 16.f / 10.f, .1f, 100.f)
 
 	{
 	}
@@ -50,9 +50,9 @@ public:
 		static float dir = -1.f;
 		static float time = 0.f;
 		time += delta;
+		metallic += delta * dir;
 		mat->ChangeParam("Metallic", metallic);
-		mat->ChangeParam("Roughness", 0);
-		//metallic += delta * dir;
+		mat->ChangeParam("Roughness", .7f);
 		if (metallic <= 0) dir = 1.f;
 		if (metallic >= 1) dir = -1.f;
 		//cmp->Translation.y = 10.f;//sinf(time) * 5.f;
@@ -61,10 +61,10 @@ public:
 		scene.OnUpdateEditor(delta, cam);
 		Scene* scenes[] = { &scene, &scene,&scene,&scene };
 		static int num_scenes = 1;
-		if (Input::IsKeyPressed(PT_KEY_1)) num_scenes = 1;
-		if (Input::IsKeyPressed(PT_KEY_2)) num_scenes = 2;
-		if (Input::IsKeyPressed(PT_KEY_3)) num_scenes = 3;
-		if (Input::IsKeyPressed(PT_KEY_4)) num_scenes = 4;
+		if (Input::IsKeyPressed(Pistachio::KEY_1)) num_scenes = 1;
+		if (Input::IsKeyPressed(Pistachio::KEY_2)) num_scenes = 2;
+		if (Input::IsKeyPressed(Pistachio::KEY_3)) num_scenes = 3;
+		if (Input::IsKeyPressed(Pistachio::KEY_4)) num_scenes = 4;
 		FrameComposer::Compose(scenes, num_scenes);
 
 	}
@@ -100,7 +100,7 @@ public:
 		scene.SyncSkybox();
 		auto& clc = e.AddComponent<LightComponent>();
 		auto& ctcc = e.GetComponent<TransformComponent>();
-		clc.color = { 0,0,1 };
+		clc.color = { 0.8, 0.8, 0.4 };
 		//clc.exData.x = DirectX::XMScalarCos(Math::ToRadians(55.f / 2.f));
 		//clc.exData.y = DirectX::XMScalarCos(Math::ToRadians(40.f / 2.f));
 		clc.exData.z = 15.f;
@@ -124,15 +124,18 @@ public:
 		const ShaderAsset* asset = GetAssetManager()->GetResource<ShaderAsset>(mat->shader);
 		mat->parametersBuffer = Renderer::AllocateConstantBuffer(asset->GetParamBufferSize());
 		mat->parametersBufferCPU = malloc(asset->GetParamBufferSize());
-		mat->ChangeParam("Diffuse", 1);
+		mat->ChangeParam("Diffuse", Vector4{1, 0, 0, 1});
 
-		mat->ChangeParam("Metallic", .0f);
+		mat->ChangeParam("Metallic", .5f);
 		const Shader& shader = asset->GetShader();
 		shader.GetShaderBinding(mat->mtlInfo, 3);
 		mat->mtlInfo.UpdateTextureBinding(RendererBase::GetWhiteTexture().GetView(), 0);
 		mat->mtlInfo.UpdateTextureBinding(RendererBase::GetWhiteTexture().GetView(), 1);
 		mat->mtlInfo.UpdateTextureBinding(RendererBase::GetWhiteTexture().GetView(), 2);
-		mat->mtlInfo.UpdateTextureBinding(RendererBase::GetWhiteTexture().GetView(), 3);
+		auto tex = Texture2D::Create("normal.png", "Normal").value();
+		mat->mtlInfo.UpdateTextureBinding(tex->GetView(), 3);
+		//leak
+		tex.release();
 		mrc.modelIndex = 0;
 		mrc.material = GetAssetManager()->FromResource(std::move(matrl), "Matrrl", ResourceType::Material).value();
 		mrc.handle = Renderer::AllocateConstantBuffer(sizeof(DirectX::XMFLOAT4X4) * 2);

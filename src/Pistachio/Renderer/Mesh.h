@@ -18,6 +18,12 @@ namespace Pistachio {
 		{
 			float u, v;
 		} TexCoord = {0,0};
+		struct {
+			float x, y, z;
+		} tangent = { 0,0,0 };
+		struct {
+			float x, y, z;
+		} bi_tangent = { 0,0,0 };
 		Vertex(float px, float py, float pz, float nx, float ny, float nz, float u, float v)
 			: position{ px, py, pz },normal{nx, ny, nz}, TexCoord{u, v}
 		{
@@ -37,7 +43,7 @@ namespace Pistachio {
 		Mesh(std::vector<Vertex>&& vertices, std::vector<unsigned int>&& indices);
 		~Mesh();
 		static BufferLayout* GetLayout();
-		static int GetLayoutSize() { return 3; }
+		static int GetLayoutSize() { return 5; }
 		[[nodiscard]] RendererVBHandle GetVBHandle() const { return m_VertexBuffer; }
 		[[nodiscard]] RendererIBHandle GetIBHandle() const { return m_IndexBuffer; }
 		[[nodiscard]] const std::vector<Vertex>& GetVertices() const {return m_vertices;}

@@ -50,7 +50,7 @@ namespace Pistachio
 	{
 		//PT_CORE_ASSERT1(std::is_convertible_v<ParamTy, checkTy>);
 		shaderTy data[components];
-		if constexpr (components == 1) { data[0] = (shaderTy)value; }
+		if constexpr (components == 1) { data[0] = *(shaderTy*)&value; }
 		else
 		{
 			checkTy vector = (checkTy)value;
