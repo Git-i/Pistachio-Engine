@@ -38,8 +38,8 @@ namespace Pistachio {
 		if (!opt.headless)
 		{
 			WindowInfo info;
-			info.height = 720;
-			info.width = 1280;
+			info.height = 625;
+			info.width = 1000;
 			info.vsync = 1;
 			info.title = name;
 			m_Window = Scope<Window>(Window::Create(info));

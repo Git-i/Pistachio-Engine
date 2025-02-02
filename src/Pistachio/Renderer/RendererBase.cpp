@@ -10,7 +10,6 @@
 #include "Pistachio/Debug/Instrumentor.h"
 #include "Ptr.h"
 #include "Texture.h"
-#include "TraceRHI.h"
 #include "RendererBase.h"
 #include "Pistachio/Core/Log.h"
 #include "Util/FormatUtils.h"
@@ -23,7 +22,7 @@ namespace Pistachio {
 	static RHI::Device* s_device = nullptr;
 	void exit_handler()
 	{
-		raise(SIGTRAP);
+		PT_DEBUG_BREAK;
 	}
 	void RendererBase::Shutdown()
 	{
@@ -51,7 +50,6 @@ namespace Pistachio {
 		base.directQueue->ExecuteCommandLists(&base.mainCommandList->ID, 1);
 		base.fence_vals[base.currentFrameIndex] = ++base.currentFenceVal;
 		base.directQueue->SignalFence(base.mainFence, base.currentFenceVal); //todo add fence signaling together with queue
-		
 		base.currentFrameIndex = (base.currentFrameIndex + 1) % 3;
 		//prep for next frame
 		{
@@ -206,8 +204,6 @@ namespace Pistachio {
 		stagingFence = device->CreateFence(0).value();
 		PT_CORE_INFO("Created fence(s)");
 
-		PT_CORE_INFO("Creating Trace Context");
-		traceRHICtx = TraceRHIContext(instance, physicalDevice, device, directQueue, mainCommandList);
 
 		RHI::PoolSize HeapSizes[3];
 
@@ -553,11 +549,6 @@ namespace Pistachio {
 		retVal.val = base.samplerHeaps[handle.heapIndex].heap->GetCpuHandle().val +
 			base.device->GetDescriptorHeapIncrementSize(RHI::DescriptorType::Sampler) * handle.heapOffset;
 		return retVal;
-	}
-	TraceRHI::Context& RendererBase::TraceContext()
-	{
-		auto& base = Application::Get().GetRendererBase();
-		return base.traceRHICtx;
 	}
 	RHI::Ptr<RHI::DescriptorHeap>& RendererBase::GetMainDescriptorHeap()
 	{ 

@@ -50,6 +50,7 @@ namespace Pistachio
 		{
 			//allocate to buffer end
 			//fast space is always at the end
+
 			PT_CORE_ASSERT(freeList.Allocate(capacity - freeFastSpace, size) == 0);
 			if (initialData)
 			{

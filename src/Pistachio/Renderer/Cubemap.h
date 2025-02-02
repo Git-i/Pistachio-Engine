@@ -2,6 +2,7 @@
 #include "Pistachio/Asset/RefCountedObject.h"
 #include "Pistachio/Core/Error.h"
 #include "pktx/texture.h"
+#include "Device.h"
 namespace Pistachio
 {
     class CubeMap : public RefCountedObject

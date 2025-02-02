@@ -237,6 +237,8 @@ namespace Pistachio
 	public:
 		~RenderGraph();
 		RenderGraph();
+		RenderGraph(const RenderGraph& other) = delete;
+		RenderGraph(RenderGraph&& other) noexcept = default;
 		void Compile();
 		void SubmitToQueue();
 		void NewFrame();

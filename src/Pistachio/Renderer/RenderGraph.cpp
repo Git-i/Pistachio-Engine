@@ -7,7 +7,6 @@
 #include "Pistachio/Renderer/RendererBase.h"
 #include "Ptr.h"
 #include "Texture.h"
-#include "TraceRHI.h"
 #include "ptpch.h"
 #include "Core/Device.h"
 #include "RenderGraph.h"
@@ -694,7 +693,6 @@ namespace Pistachio
 
             {
                 if (std::is_same_v<PassTy, RenderPass> && attachments.size()) currentList->BeginRendering(rbDesc);
-                TraceRHIZone("RenderGraph", currentList, RendererBase::TraceContext());
                 pass->pass_fn(currentList);
                 stage = pass_stg;
             }

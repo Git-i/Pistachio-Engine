@@ -1,6 +1,7 @@
 #include "ptpch.h"
 #include "WindowsWindow.h"
 #include "Pistachio/Core/Log.h"
+#include "Pistachio/Renderer/RendererBase.h"
 #ifdef IMGUI
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
@@ -10,7 +11,7 @@
 #include "Pistachio/Event/ApplicationEvent.h"
 #include "Pistachio/Event/KeyEvent.h"
 #include "Pistachio/Event/MouseEvent.h"
-#include "Pistachio/Platform/Windows/WindowsInputCallbacks.h"
+#include "Pistachio/Core/InputCallbacks.h"
 
 #pragma comment(lib, "shell32.lib")
 void* WindowDataPtr;
@@ -182,20 +183,23 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 
 namespace Pistachio {
-	
-	Window* Window::Create(const WindowInfo& info, bool m_headless)
+	void Window_PreGraphicsInit()
 	{
-		return new WindowsWindow(info, m_headless);
+		
 	}
-	WindowsWindow::WindowsWindow(const WindowInfo& info, bool headless)
+	Window* Window::Create(const WindowInfo& info)
 	{
-		Init(info, GetModuleHandleA(NULL), headless);
+		return new WindowsWindow(info);
+	}
+	WindowsWindow::WindowsWindow(const WindowInfo& info)
+	{
+		Init(info, GetModuleHandleA(NULL));
 	}
 	WindowsWindow::~WindowsWindow()
 	{
 		Shutdown();
 	}
-	int WindowsWindow::Init(const WindowInfo& info, HINSTANCE hInstance, bool headless)
+	int WindowsWindow::Init(const WindowInfo& info, HINSTANCE hInstance)
 	{
 		PT_PROFILE_FUNCTION();
 		//SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
@@ -245,7 +249,6 @@ namespace Pistachio {
 		}
 		DragAcceptFiles(pd.hwnd, TRUE);
 		ShowWindow(pd.hwnd, SW_SHOWDEFAULT);
-		if (headless) ShowWindow(pd.hwnd, SW_HIDE);
 #if _DEBUG
 		if (AllocConsole() == 0)
 		{
@@ -275,6 +278,9 @@ namespace Pistachio {
 		SetConsoleTitleW(L"Pistachio Application Debug Console");
 #endif
 		m_data.dpiscale = 1;// (float)GetDpiForWindow(pd.hwnd) / 96.f;
+		m_swapChain.surface = RHI::Surface::InitWin32(pd.hwnd, RendererBase::GetInstance()).value();
+		//m_swapChain.Initialize(info.width, info.height);
+		m_swapChain.Initialize(1016, 676);
 		return 0;
 
 	}
@@ -292,13 +298,12 @@ namespace Pistachio {
 			std::string title = std::string("FPS: ") + buf;
 			SetWindowTextW(pd.hwnd, (wchar_t*)title.c_str());
 		#endif // _DEBUG
+		m_swapChain.Update();
 		MSG msg = {};
 		while (PeekMessageW(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
-			if (msg.message == WM_QUIT)
-				m_Running = false;
 		}
 	}
 	void WindowsWindow::SetVsync(unsigned int enabled)

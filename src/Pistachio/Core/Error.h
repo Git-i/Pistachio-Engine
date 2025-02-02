@@ -5,8 +5,11 @@
 #include <filesystem>
 #include <utility>
 #include "pktx/texture.h"
-#ifdef __GNUC__
+
+#ifdef __GNU_C__
 #define PT_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#elif defined(_MSC_VER)
+#define PT_PRETTY_FUNCTION __FUNCSIG__
 #endif
 namespace Pistachio {
 	enum class ErrorType

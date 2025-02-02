@@ -12,6 +12,9 @@ namespace Pistachio
 	class PISTACHIO_API AssetManager
 	{
 	public:
+		AssetManager() = default;
+		AssetManager(const AssetManager&) = delete;
+		AssetManager(AssetManager&&) noexcept = default;
 		[[nodiscard]] Result<Asset> CreateMaterialAsset(const std::string& filename);
 		[[nodiscard]] Result<Asset> CreateTexture2DAsset(const std::string& filename);
 		[[nodiscard]] Result<Asset> CreateModelAsset(const std::string& filename);

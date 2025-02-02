@@ -1,6 +1,5 @@
 #pragma once
 // Pistachio Precompiled Headers -----------------------------------------------------------
-#define NOMINMAX
 #include <iostream>
 #include <functional>
 #include <memory>
@@ -34,5 +33,4 @@
 #include "Pistachio/Core/Log.h"
 #include "Pistachio/Debug/Instrumentor.h"
 #include "tracy/Tracy.hpp"
-#include "TraceRHI.h"
 

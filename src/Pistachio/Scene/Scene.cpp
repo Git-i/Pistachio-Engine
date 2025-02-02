@@ -31,6 +31,9 @@
 #include "CullingManager.h"
 #include "../Renderer/Material.h"
 
+#undef near
+#undef far
+
 static void getFrustumCornersWorldSpace(const DirectX::XMMATRIX& proj, const DirectX::XMMATRIX& view, DirectX::XMVECTOR* corners)
 {
 	PT_PROFILE_FUNCTION();

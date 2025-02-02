@@ -8,7 +8,6 @@
 #include "../Core/Instance.h"
 #include "Pistachio/Renderer/Texture.h"
 #include "Ptr.h"
-#include "TraceRHI.h"
 namespace Pistachio {
 	template<typename T>
 	concept rendererbase_handle = std::is_trivially_copy_assignable_v<T> && requires(T a){
@@ -130,7 +129,6 @@ namespace Pistachio {
 		static Texture2D& GetWhiteTexture();
 		static Texture2D& GetBlackTexture();
 		static uint32_t GetCurrentFrameIndex();
-		static TraceRHI::Context& TraceContext();
 		static RendererBase& Get();
 		static constexpr uint32_t numFramesInFlight = 3;
 	private:
@@ -143,7 +141,6 @@ namespace Pistachio {
 		friend class Scene;
 		friend class SwapChain;
 		friend struct SamplerHandle;
-		TraceRHI::Context traceRHICtx;
 		RHI::Ptr<RHI::Device> device;
 		RHI::Ptr<RHI::GraphicsCommandList> mainCommandList;
 		RHI::Ptr<RHI::GraphicsCommandList> stagingCommandList;

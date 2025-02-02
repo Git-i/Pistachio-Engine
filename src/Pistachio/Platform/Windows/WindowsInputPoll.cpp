@@ -1,19 +1,25 @@
 #include "ptpch.h"
 #include "Pistachio/Core/Input.h"
 #include "Pistachio/Core/Application.h"
+#include "WindowsInputHandler.h"
 
 namespace Pistachio {
 	bool KeyRepeatPoll;
 	int LastKeyPoll;
-	bool Input::IsKeyPressed(KeyCode code)
+	InputHandler* CreateDefaultInputHandler()
 	{
+		return new WindowsInputHandler;
+	}
+	bool WindowsInputHandler::IsKeyPressed(KeyCode code)
+	{
+		return GetKeyState('A');
 		return (::GetKeyState(code) & 0x8000) != 0;
 	}
-	bool Input::IsKeyJustPressed(KeyCode code)
+	bool WindowsInputHandler::IsKeyJustPressed(KeyCode code)
 	{
 		bool a = 0;
 		bool first = 1;
-		if (GetActiveWindow() == Application::Get().GetWindow().pd.hwnd)
+		if (GetActiveWindow() == Application::Get().GetWindow()->pd.hwnd)
 			a = ((::GetKeyState(code) & 0x8000) != 0) && (!(KeyRepeatPoll && LastKeyPoll == code));
 		if (first == 1) {
 			LastKeyPoll = code;
@@ -28,37 +34,37 @@ namespace Pistachio {
 		}
 		return a;
 	}
-	int Input::GetMouseX(bool wndcoord)
+	int WindowsInputHandler::GetMouseX(bool wndcoord)
 	{
 		POINT Position;
 		GetCursorPos(&Position);
 		if (wndcoord)
-			ScreenToClient(Application::Get().GetWindow().pd.hwnd, &Position);
+			ScreenToClient(Application::Get().GetWindow()->pd.hwnd, &Position);
 		return Position.x;
 	}
-	int Input::GetMouseY(bool wndcoord)
+	int WindowsInputHandler::GetMouseY(bool wndcoord)
 	{
 		POINT Position;
 		GetCursorPos(&Position);
 		if (wndcoord)
-			ScreenToClient(Application::Get().GetWindow().pd.hwnd, &Position);
+			ScreenToClient(Application::Get().GetWindow()->pd.hwnd, &Position);
 		return Position.y;
 	}
 
-	bool Input::IsMouseButtonPressed(MouseButton button)
+	bool WindowsInputHandler::IsMouseButtonPressed(MouseButton button)
 	{
-		return Input::IsKeyPressed(button);
+		return WindowsInputHandler::IsKeyPressed(button);
 	}
-	bool Input::IsMouseButtonJustPressed(MouseButton button)
+	bool WindowsInputHandler::IsMouseButtonJustPressed(MouseButton button)
 	{
-		return Input::IsKeyJustPressed(button);
+		return WindowsInputHandler::IsKeyJustPressed(button);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 	///Gamepad/////////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	float Input::GetLeftAnalogX(int ID)
+	float WindowsInputHandler::GetLeftAnalogX(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -80,7 +86,7 @@ namespace Pistachio {
 		}
 		return 0.0f;
 	}
-	float Input::GetLeftAnalogY(int ID)
+	float WindowsInputHandler::GetLeftAnalogY(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -102,7 +108,7 @@ namespace Pistachio {
 		}
 		return 0.0f;
 	}
-	float Input::GetRightAnalogX(int ID)
+	float WindowsInputHandler::GetRightAnalogX(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -124,7 +130,7 @@ namespace Pistachio {
 		}
 		return 0.0f;
 	}
-	float Input::GetRightAnalogY(int ID)
+	float WindowsInputHandler::GetRightAnalogY(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -146,7 +152,7 @@ namespace Pistachio {
 		}
 		return 0.0f;
 	}
-	bool Input::IsGamepadButtonPressed(int ID, int code)
+	bool WindowsInputHandler::IsGamepadButtonPressed(int ID, int code)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -168,7 +174,7 @@ namespace Pistachio {
 		}
 		return false;
 	}
-	bool Input::IsGamepadButtonJustPressed(int ID, int code)
+	bool WindowsInputHandler::IsGamepadButtonJustPressed(int ID, int code)
 	{
 		static bool repeat = false;
 		bool b;
@@ -205,7 +211,7 @@ namespace Pistachio {
 		}
 		return false;
 	}
-	void Input::VibrateController(int ID, int left, int right)
+	void WindowsInputHandler::VibrateController(int ID, int left, int right)
 	{
 		XINPUT_VIBRATION vibrationDesc;
 
@@ -216,7 +222,7 @@ namespace Pistachio {
 		XInputSetState(ID - 1, &vibrationDesc);
 
 	}
-	float Input::GetLeftTriggerState(int ID)
+	float WindowsInputHandler::GetLeftTriggerState(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;
@@ -238,7 +244,7 @@ namespace Pistachio {
 		}
 		return 0.0f;
 	}
-	float Input::GetRightTriggerState(int ID)
+	float WindowsInputHandler::GetRightTriggerState(int ID)
 	{
 		DWORD dwResult;
 		XINPUT_STATE state;

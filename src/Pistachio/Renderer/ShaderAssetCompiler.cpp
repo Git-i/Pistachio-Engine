@@ -3,6 +3,7 @@
 #include "ShaderAssetCompiler.h"
 #include <iostream>
 #include <memory>
+#include <fstream>
 #include <string_view>
 #include <sstream>
 #include <charconv>

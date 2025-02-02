@@ -1,7 +1,9 @@
 #pragma once
 #include <memory>
 #ifdef _MSC_VER
-#define PT_DEBUG_BREAK __debugbreak()
+#define PT_DEBUG_BREAK __debugbreak();
+#elif definded(__GNUC__)
+#define PT_DEBUG_BREAK __builtin_trap();
 #else
 #include <signal.h>
 #define PT_DEBUG_BREAK raise(SIGTRAP);
@@ -40,9 +42,7 @@ inline constexpr EnumType& operator^=(EnumType& a, EnumType b) {                
     return a;                                                                  \
 }
 
-
-#ifdef PT_PLATFORM_WINDOWS
-#ifdef DYNAMICLINK
+#if defined(PT_PLATFORM_WINDOWS) && defined(USE_DLL)
 	#ifdef PISTACHIO_BUILD_DLL
 		#define PISTACHIO_API __declspec(dllexport)
 	#else
@@ -62,9 +62,6 @@ inline constexpr EnumType& operator^=(EnumType& a, EnumType b) {                
 #else
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #endif
-#else
-	#define PISTACHIO_API
-#endif // PT_PLATFROM_WINDOWS
 
 #define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 

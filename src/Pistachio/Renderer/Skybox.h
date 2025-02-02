@@ -8,7 +8,7 @@ namespace Pistachio
      * @brief Used by scenes for skybox, and can be loaded from a skybox file
      * 
      */
-    class Skybox : public RefCountedObject
+    class PISTACHIO_API Skybox : public RefCountedObject
     {
     public:
         [[nodiscard]] static Result<std::unique_ptr<Skybox>> Create(std::string_view path);

@@ -13,7 +13,7 @@ endif
 
 assimp_dep = dependency('assimp')
 
-glfw3_dep = dependency('glfw3')
+
 
 
 rhi = subproject('RHI')
@@ -49,10 +49,7 @@ deps = [
 if(get_option('profiler_support') == 'tracy')
 tracy = subproject('tracy')
 tracy_dep = tracy.get_variable('tracy_dep')
-trace_rhi = subproject('TraceRHI')
-trace_rhi_dep = trace_rhi.get_variable('trace_rhi_dep')
 deps += tracy_dep
-deps += trace_rhi_dep
 args += '-DPT_PROFILE_TRACY'
 elif (get_option('profiler_support') == 'json')
 args += '-DPT_PROFILE_JSON'
@@ -60,10 +57,12 @@ endif
 
 inc_dirs = ['src/',
     'vendor/entt/include/',
-    'vendor/sal',
     'vendor/SimpleMath',
     'vendor/stb_image/',
     'vendor/DirectXMath/',]
+if(build_machine.system() != 'windows')
+    inc_dirs += 'vendor/sal'
+endif
 
 sources = [
     'src/Pistachio/Core/UUID.cpp',
@@ -110,7 +109,7 @@ sources = [
     'vendor/stb_image/stb_image.cpp'
 ]
 tests_src = [
-    'tests/script_test.cpp'
+    'tests/engine_test.cpp'
 ]
 shaders_dir = 'src/Pistachio/Renderer/shaders/'
 vertex_shaders = [
@@ -170,11 +169,18 @@ custom_target('Pixel Shaders', command: ps_args, input: ps_input,output: ps_outp
 custom_target('Compute Shaders', command: cs_args, input: cs_input, output: cs_output)
 
 if(build_machine.system() == 'linux')
+    glfw3_dep = dependency('glfw3')
     deps += glfw3_dep
     args += '-DUSE_GLFW'
     args += '-DPT_PLATFORM_LINUX'
     sources += 'src/Pistachio/Platform/Linux/LinuxWindow.cpp'
     sources += 'src/Pistachio/Platform/Linux/LinuxInputPoll.cpp'
+endif
+if(build_machine.system() == 'windows')
+    sources += 'src/Pistachio/Platform/Windows/WindowsWindow.cpp'
+    sources += 'src/Pistachio/Platform/Windows/WindowsInputPoll.cpp'
+    args += '-DNOMINMAX'
+    args += '-DPT_PLATFORM_WINDOWS'
 endif
 if(get_option('verbose_logging') == true)
 args += '-DPT_VERBOSE'
@@ -185,7 +191,11 @@ args += '-DPT_USE_MENUM'
 endif
 add_project_arguments(args,language: 'cpp',)
 inc = include_directories(inc_dirs)
-lib = shared_library('Pistachio',sources,include_directories:inc,dependencies:deps,
-    override_options: ['cpp_std=c++20'])
+args = ['-DPISTACHIO_BUILD_DLL']
+if get_option('using_dll')
+    args += ['USE_DLL']
+endif
+lib = library('Pistachio',sources,include_directories:inc,dependencies:deps,
+    override_options: ['cpp_std=c++20'], cpp_args: args)
 pistachio_dep = declare_dependency(include_directories:inc, link_with:lib, dependencies: deps)
-executable('Pistachio-Tests', tests_src,dependencies: pistachio_dep)
+executable('Pistachio-Tests', tests_src, dependencies: [pistachio_dep, dependency('catch2-with-main')])

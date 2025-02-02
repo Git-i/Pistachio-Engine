@@ -12,7 +12,7 @@ namespace Pistachio {
 	class WindowsWindow : public Window
 	{
 	public:
-		WindowsWindow(const WindowInfo& info, bool headless);
+		WindowsWindow(const WindowInfo& info);
 		virtual ~WindowsWindow();
 
 		void OnUpdate(float delta) override;
@@ -22,7 +22,7 @@ namespace Pistachio {
 		unsigned int IsVsync() const override;
 		inline void SetEventCallback(const EventCallbackFn& event) { m_data.EventCallback = event; }
 	private:
-		virtual int Init(const WindowInfo& info, HINSTANCE hInstance, bool headless);
+		virtual int Init(const WindowInfo& info, HINSTANCE hInstance);
 		virtual void Shutdown();
 	};
 }
